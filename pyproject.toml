@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = ["keras", "numpy", "pandas", "tensorflow"]
 description = "A modern Python implementation for population receptive field modelling."
 keywords = [""]
 license = {file = "LICENSE"}
