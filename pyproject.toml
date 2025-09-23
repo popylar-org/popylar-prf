@@ -44,6 +44,7 @@ dev = [
     "ruff",
     "tox",
     "myst_parser",
+    "pre-commit",
 ]
 publishing = [
     "build",
