@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = ["keras", "numpy", "pandas"]
 description = "A modern Python implementation for population receptive field modelling."
 keywords = [""]
 license = {file = "LICENSE"}
@@ -44,6 +44,7 @@ dev = [
     "ruff",
     "tox",
     "myst_parser",
+    "pre-commit",
 ]
 publishing = [
     "build",
@@ -85,8 +86,6 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Enable Pyflakes `E` and `F` codes by default.
 select = ["ALL"]
 ignore = [
-    "ANN101", # Missing type annotation for `self` in method
-    "ANN102", # Missing type annotation for `cls` in classmethod
     "ANN204", # Missing return type annotation for special (dunder) method
     "FBT",    # Using boolean function arguments
     "TD",     # TODOs
@@ -122,7 +121,3 @@ filename = "src/popylar_prf/__init__.py"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
-
-
-
-
