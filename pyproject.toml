@@ -45,6 +45,10 @@ dev = [
     "tox",
     "myst_parser",
     "pre-commit",
+    "mypy",
+    "types-tensorflow",
+    "jax",
+    "torch",
 ]
 publishing = [
     "build",
