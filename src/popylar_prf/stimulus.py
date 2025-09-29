@@ -158,3 +158,91 @@ class Stimulus:
         dimensions_labels_equal = self.dimension_labels == other.dimension_labels
 
         return bool(design_equal and grid_equal and dimensions_labels_equal)
+
+    @classmethod
+    def create_2d_bar_stimulus(  # noqa: PLR0913 (too many arguments)
+        cls,
+        num_frames: int = 100,
+        width: int = 128,
+        height: int = 128,
+        bar_width: int = 20,
+        direction: str = "horizontal",
+        pixel_size: float = 0.05,
+    ) -> "Stimulus":
+        """
+        Create a bar stimulus that moves across a 2D screen.
+
+        The stimulus starts and ends moving just outside the screen.
+
+        Parameters
+        ----------
+        num_frames : int, optional
+            Number of time frames in the stimulus.
+        width : int, optional
+            Width of the stimulus grid (in pixels).
+        height : int, optional
+            Height of the stimulus grid (in pixels).
+        bar_width : int, optional
+            Width of the moving bar (in pixels).
+        direction : {"horizontal", "vertical"}, optional
+            Direction in which the bar moves.
+        pixel_size : float, optional
+            Size of a pixel in spatial units.
+
+        Returns
+        -------
+        Stimulus
+            A Stimulus instance with the generated design and grid.
+
+        Raises
+        ------
+        ValueError
+            If `direction` is not "horizontal" or "vertical".
+
+        Examples
+        --------
+        >>> Stimulus.create_2d_bar_stimulus(num_frames=200)
+        Stimulus(design=array[200, 128, 128], grid=array[128, 128, 2], dimension_labels=['y', 'x'])
+
+        """
+        # Create a centered grid of x and y coordinates
+        x = (np.arange(width) - (width - 1) / 2) * pixel_size
+        y = (np.arange(height) - (height - 1) / 2) * pixel_size
+        xv, yv = np.meshgrid(x, y)
+        grid = np.stack((xv, yv), axis=-1)  # shape (height, width, 2)
+
+        # Create the design array
+        design = np.zeros((num_frames, height, width), dtype=np.float32)
+
+        for frame in range(num_frames):
+            if direction == "horizontal":
+                # Bar moves left to right, starting and ending just outside the screen
+                bar_start = int(np.round(-bar_width + frame * (width + bar_width) / (num_frames - 1)))
+                bar_end = bar_start + bar_width
+                # Only draw within screen bounds
+                screen_start = max(bar_start, 0)
+                screen_end = min(bar_end, width)
+
+                if screen_start < screen_end:
+                    design[frame, :, screen_start:screen_end] = 1.0
+            elif direction == "vertical":
+                # Bar moves top to bottom, starting and ending just outside the screen
+                bar_start = int(np.round(-bar_width + frame * (height + bar_width) / (num_frames - 1)))
+                bar_end = bar_start + bar_width
+                screen_start = max(bar_start, 0)
+                screen_end = min(bar_end, height)
+
+                if screen_start < screen_end:
+                    design[frame, screen_start:screen_end, :] = 1.0
+            else:
+                msg = "Direction must be 'horizontal' or 'vertical'"
+                raise ValueError(msg)
+
+        # Dimension y comes first because numpy uses row-major order (i.e., the first axis represents rows or height)
+        dimension_labels = ["y", "x"]
+
+        return cls(
+            design=design,
+            grid=grid,
+            dimension_labels=dimension_labels,
+        )

@@ -135,3 +135,35 @@ def test_rectangular_grid(dimensions: str, axis: str):
     )
 
     assert isinstance(stimulus, Stimulus)
+
+
+@pytest.mark.parametrize("direction", ["horizontal", "vertical"])
+def test_create_2d_bar_stimulus(direction: str):
+    """Check that a valid 2D bar stimulus can be created."""
+    stimulus = Stimulus.create_2d_bar_stimulus(
+        num_frames=10,
+        width=5,
+        height=4,
+        direction=direction,
+    )
+
+    assert isinstance(stimulus, Stimulus)
+    # First and last frame should be empty
+    assert np.all(stimulus.design[0] == 0.0)
+    assert np.all(stimulus.design[-1] == 0.0)
+
+    # Design should have range 0-1
+    assert np.min(stimulus.design) == 0.0
+    assert np.max(stimulus.design) == 1.0
+
+    match direction:
+        case "horizontal":
+            # For horizontal bars, each row (height axis) should have the same value within a frame
+            # Each row in the frame should be constant
+            rows_equal = np.all(stimulus.design == stimulus.design[:, [0], :])  # (10,5,4) == (10,1,4)
+            assert np.all(rows_equal)
+        case "vertical":
+            # For vertical bars, each column (width axis) should have the same value within a frame
+            # All values in each column should be equal for all frames
+            cols_equal = np.all(stimulus.design == stimulus.design[:, :, [0]])
+            assert np.all(cols_equal)
