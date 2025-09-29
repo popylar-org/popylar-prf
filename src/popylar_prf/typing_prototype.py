@@ -30,7 +30,12 @@ def to_numpy_safe(x: tf.Tensor) -> np.ndarray:
 class TorchModel(keras.Model):
     """Torch class."""
 
-    def update_model_weights(self, x: tf.Tensor, y: tf.Tensor, state: str | None = None) -> tuple[float, Any]:
+    def update_model_weights(
+        self,
+        x: tf.Tensor,
+        y: tf.Tensor,
+        state: str | None = None,
+    ) -> tuple[dict[str, float], Any]:
         """Update model weights."""
         self.zero_grad()
 
@@ -61,17 +66,20 @@ class JAXModel(keras.Model):
 
     def compute_loss_and_updates(
         self,
-        trainable_variables: list[tf.Tensor],
-        non_trainable_variables: list[tf.Tensor],
+        trainable_variables: list[jax.Array],
+        non_trainable_variables: list[jax.Array],
         x: tf.Tensor,
         y: tf.Tensor,
-    ) -> tuple[tf.Tensor, tuple[tf.Tensor, tf.Tensor]]:
+    ) -> tuple[
+        jax.Array,
+        tuple[list[jax.Array], list[jax.Array]],
+    ]:
         """Update model weights."""
         # Convert JAX arrays to ensure compatibility
         trainable_variables = [jnp.array(v) for v in trainable_variables]
         non_trainable_variables = [jnp.array(v) for v in non_trainable_variables]
 
-        state_mapping = []
+        state_mapping: list[tuple[jax.Array, jax.Array]] = []
         state_mapping.extend(zip(self.trainable_variables, trainable_variables, strict=False))
         state_mapping.extend(zip(self.non_trainable_variables, non_trainable_variables, strict=False))
 
@@ -83,18 +91,24 @@ class JAXModel(keras.Model):
                     {key.name: val for key, val in zip(self.trainable_variables, trainable_variables, strict=False)},
                 ),
             )
-            loss = self.compute_loss(y=y, y_pred=y_pred)
+            loss: jax.Array = self.compute_loss(y=y, y_pred=y_pred)  # TODO: why is this necessary?
 
         # update variables
         non_trainable_variables = [scope.get_current_value(v) for v in self.non_trainable_variables]
 
         return loss, (y_pred, non_trainable_variables)
 
+    # TODO: here we need to define the types in the class definition? what does `super` define them as?
     def get_state(self) -> tuple[tf.Tensor]:
         """Get state."""
         return self.trainable_variables, self.non_trainable_variables, self.optimizer.variables, self.metrics_variables
 
-    def update_model_weights(self, x: tf.Tensor, y: tf.Tensor, state: tf.Tensor) -> tuple[tf.Tensor]:
+    def update_model_weights(
+        self,
+        x: tf.Tensor,
+        y: tf.Tensor,
+        state: list[tf.Tensor],
+    ) -> tuple[dict[str, float], list[tf.Tensor]]:
         """Update weights."""
         (
             trainable_variables,
@@ -122,7 +136,7 @@ class JAXModel(keras.Model):
         )
 
         new_metrics_vars: list[tf.Tensor] = []
-        logs = {}
+        logs: dict[str, float] = {}
         for metric in self.metrics:
             this_metric_vars = metrics_variables[len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)]
             if metric.name == "loss":
@@ -136,11 +150,11 @@ class JAXModel(keras.Model):
             logs[metric.name] = metric.stateless_result(this_metric_vars)
             new_metrics_vars += this_metric_vars
 
-        state = (
+        state = [
             trainable_variables,
             non_trainable_variables,
             optimizer_variables,
-            new_metrics_vars,
-        )
+            new_metrics_vars,  # this is keeps creating problems
+        ]
 
         return logs, state
