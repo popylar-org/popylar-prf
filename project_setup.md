@@ -54,6 +54,7 @@ help you decide which tool to use for packaging.
 - We write the documentation using Restructured Text (reST) and numpydoc docstrings.
   - [Restructured Text (reST) and Sphinx CheatSheet](https://thomas-cokelaer.info/tutorials/sphinx/rest_syntax.html)
   - [Numpydoc manual](https://numpydoc.readthedocs.io/en/latest/)
+
 - The documentation is set up with the ReadTheDocs Sphinx theme.
   - Check out its [configuration options](https://sphinx-rtd-theme.readthedocs.io/en/latest/).
 - [AutoAPI](https://sphinx-autoapi.readthedocs.io/) is used to generate documentation for the package Python objects.
