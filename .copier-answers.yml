@@ -6,7 +6,8 @@ SelectCodeQualityFeatures:
 - AddPreCommit_flag
 - AddEditorConfig_flag
 SelectCommunityFeatures: []
-SelectDocumentationFeatures: []
+SelectDocumentationFeatures:
+- AddLocalDocumentation_flag
 SelectGitHubActions:
 - AddGitHubActionBuild_flag
 SelectPublishReleaseFeatures: []
