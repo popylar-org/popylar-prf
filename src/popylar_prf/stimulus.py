@@ -88,6 +88,7 @@ class Stimulus:
     Examples
     --------
     Create a stimulus on a 2D grid.
+
     >>> import numpy as np
     >>> from popylar_prf import Stimulus
     >>> num_frames, width, height = 10, 16, 16
@@ -104,7 +105,8 @@ class Stimulus:
     >>> # The coordinates of the top-right corner:
     >>> grid[15, 15, :]
     array([0.375, 0.375])
-    >>> Stimulus(design=design, grid=grid, dimension_labels=["y", "x"])
+    >>> stimulus = Stimulus(design=design, grid=grid, dimension_labels=["y", "x"])
+    >>> print(stimulus)
     Stimulus(design=array[10, 16, 16], grid=array[16, 16, 2], dimension_labels=['y', 'x'])
 
     """
@@ -201,7 +203,8 @@ class Stimulus:
 
         Examples
         --------
-        >>> Stimulus.create_2d_bar_stimulus(num_frames=200)
+        >>> stimulus = Stimulus.create_2d_bar_stimulus(num_frames=200)
+        >>> print(stimulus)
         Stimulus(design=array[200, 128, 128], grid=array[128, 128, 2], dimension_labels=['y', 'x'])
 
         """

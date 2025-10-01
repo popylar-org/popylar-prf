@@ -45,6 +45,9 @@ dev = [
     "tox",
     "myst_parser",
     "pre-commit",
+    "sphinx",
+    "sphinx-autoapi",
+    "furo",
 ]
 publishing = [
     "build",
@@ -106,6 +109,11 @@ pydocstyle.convention = "numpy"
     "ANN201", # Missing return type annotation for public function
     "PT011",  # Missing `match` parameter in `pytest.raises()`
     "S101",   # Use of assert is detected
+]
+"docs/conf.py" = [
+    "ERA001", # Found commented-out code
+    "INP001", # Part of implicit namespace package
+    "A001", # Variable `copyright` is shadowing Python builtin. See https://github.com/sphinx-doc/sphinx/issues/8132
 ]
 
 [tool.ruff.lint.isort]
