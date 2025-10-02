@@ -48,6 +48,9 @@ dev = [
     "sphinx",
     "sphinx-autoapi",
     "furo",
+    "mypy",
+    "types-tensorflow",
+    "pandas-stubs",
 ]
 publishing = [
     "build",
@@ -132,3 +135,7 @@ filename = "src/popylar_prf/__init__.py"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
+
+[[tool.mypy.overrides]]
+module = ["keras.*"]
+ignore_missing_imports = true
