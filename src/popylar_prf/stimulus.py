@@ -16,7 +16,7 @@ class GridDesignShapeError(Exception):
         Shape of the grid array.
     """
 
-    def __init__(self, design_shape: tuple[int], grid_shape: tuple[int]):
+    def __init__(self, design_shape: tuple[int], grid_shape: tuple[int, ...]):
         super().__init__(f"Shapes of 'design' {design_shape} and 'grid' {grid_shape} do not match")
 
 
@@ -31,7 +31,7 @@ class GridDimensionsError(Exception):
 
     """
 
-    def __init__(self, grid_shape: tuple[int]) -> None:
+    def __init__(self, grid_shape: tuple[int, ...]) -> None:
         num_grid_axes = len(grid_shape[:-1])
         super().__init__(
             f"The number of dimensions in 'grid' {num_grid_axes} does not match its last dimension {grid_shape[-1]}",
@@ -111,7 +111,8 @@ class Stimulus:
 
     """
 
-    __hash__ = None  # We don't want the object to be hashable because it's mutable
+    # We don't want the object to be hashable because it's mutable
+    __hash__ = None  # type: ignore[assignment]
 
     def __init__(self, design: np.ndarray, grid: np.ndarray, dimension_labels: Sequence[str] | None = None):
         self.design = design
