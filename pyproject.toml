@@ -54,6 +54,9 @@ publishing = [
     "twine",
     "wheel",
 ]
+torch = ["torch"]
+jax = ["jax"]
+tensorflow = ["tensorflow"]
 
 [project.urls]
 Repository = "https://github.com/popylar-org/popylar_prf"
