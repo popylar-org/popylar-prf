@@ -48,6 +48,9 @@ dev = [
     "sphinx",
     "sphinx-autoapi",
     "furo",
+    "mypy",
+    "types-tensorflow",
+    "pandas-stubs",
 ]
 publishing = [
     "build",
