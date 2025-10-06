@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = ["keras", "numpy", "pandas"]
+dependencies = ["keras", "numpy", "pandas", "scipy"]
 description = "A modern Python implementation for population receptive field modelling."
 keywords = [""]
 license = {file = "LICENSE"}
@@ -48,12 +48,18 @@ dev = [
     "sphinx",
     "sphinx-autoapi",
     "furo",
+    "mypy",
+    "types-tensorflow",
+    "pandas-stubs",
 ]
 publishing = [
     "build",
     "twine",
     "wheel",
 ]
+torch = ["torch"]
+jax = ["jax"]
+tensorflow = ["tensorflow"]
 
 [project.urls]
 Repository = "https://github.com/popylar-org/popylar_prf"
@@ -129,3 +135,7 @@ filename = "src/popylar_prf/__init__.py"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
+
+[[tool.mypy.overrides]]
+module = ["keras.*"]
+ignore_missing_imports = true
