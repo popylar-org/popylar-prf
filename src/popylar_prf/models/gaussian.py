@@ -1,11 +1,15 @@
 """Gaussian population receptive field response models."""
 
+import pandas as pd
 from keras import ops
 from popylar_prf.stimulus import GridDimensionsError
+from popylar_prf.stimulus import Stimulus
 from popylar_prf.typing import Tensor
+from popylar_prf.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
 from .base import ParameterBatchDimensionError
 from .base import ParameterShapeError
+from .base import ResponseModel
 
 
 class GridMuDimensionsError(Exception):
@@ -144,3 +148,75 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
     resp /= 2 * ops.square(sigma)
 
     return ops.exp(-resp)
+
+
+class Gaussian2DResponseModel(ResponseModel):
+    """
+    Two-dimensional isotropic Gaussian population receptive field response model.
+
+    Predicts a response to a stimulus grid.
+    The model has three parameters: `mu_y` and `mu_x` for the center and `sigma` for the width of the Gaussian.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from popylar_prf.stimulus import Stimulus
+    >>> # Define a 2D grid
+    >>> num_x, num_y = 20, 10
+    >>> x = np.linspace(-3, 3, num_x)
+    >>> y = np.linspace(-4, 4, num_y)
+    >>> xv, yv = np.meshgrid(x, y)
+    >>> grid = np.stack((xv, yv), axis=-1)  # shape (20, 10, 2)
+    >>> # Define 2D centroids of Gaussian for 3 voxels
+    >>> params = pd.DataFrame({
+    >>>     "mu_x": [0.0, 1.0, 0.0],
+    >>>     "mu_y": [1.0, 0.0, 0.0],
+    >>>     "sigma": [1.0, 1.5, 2.0],
+    >>> })
+    >>> # Define dummy design for 10 frames
+    >>> design = np.ones(10, num_y, num_x)
+    >>> # Create stimulus object
+    >>> stimulus = Stimulus(
+    >>>     design=design,
+    >>>     grid=grid,
+    >>>     dimension_labels=("y", "x"),
+    >>> )
+    >>> # Create model instance
+    >>> model = Gaussian2DResponseModel()
+    >>> # Predict response to stimulus grid
+    >>> resp = model(stimulus, params)
+    >>> print(resp.shape) # (num_voxels, num_y, num_x)
+    (3, 20, 10)
+    """
+
+    @property
+    def parameter_names(self) -> list[str]:
+        """Names of parameters used by the model: `mu_y`, `mu_x`, `sigma`."""
+        return ["mu_y", "mu_x", "sigma"]
+
+    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame) -> Tensor:
+        """
+        Predict the model response for a stimulus with a 2D grid.
+
+        Parameters
+        ----------
+        stimulus : Stimulus
+            Stimulus object with a 2D stimulus grid.
+        parameters : pandas.DataFrame
+            Dataframe with columns containing different model parameters and rows containing parameter values
+            for different voxels. Must contain the columns `mu_y`, `mu_x` and `sigma`.
+
+        Returns
+        -------
+        Tensor
+            Model predictions of shape `(num_voxels, size_y, size_x)` where
+            `num_voxels` is the number of rows in `parameters` and `size_y` and `size_x` are the sizes of the
+            x and y stimulus grid dimension.
+        """
+        # Convention is y-dimension first
+        mu = convert_parameters_to_tensor(parameters[["mu_y", "mu_x"]])
+        sigma = convert_parameters_to_tensor(parameters[["sigma"]])
+        grid = ops.convert_to_tensor(stimulus.grid)
+
+        return predict_gaussian_response(grid, mu, sigma)

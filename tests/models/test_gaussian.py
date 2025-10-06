@@ -1,14 +1,17 @@
 """Test Gaussian model classes."""
 
 import numpy as np
+import pandas as pd
 import pytest
 from popylar_prf.models.base import ParameterBatchDimensionError
 from popylar_prf.models.base import ParameterShapeError
+from popylar_prf.models.gaussian import Gaussian2DResponseModel
 from popylar_prf.models.gaussian import GridMuDimensionsError
 from popylar_prf.models.gaussian import _check_gaussian_args
 from popylar_prf.models.gaussian import _expand_gaussian_args
 from popylar_prf.models.gaussian import predict_gaussian_response
 from popylar_prf.stimulus import GridDimensionsError
+from popylar_prf.stimulus import Stimulus
 
 
 class TestCheckGaussianArgs:
@@ -163,3 +166,45 @@ class TestPredictGaussianResponse(TestSetup):
         preds = predict_gaussian_response(grid_3d, mu_3d, sigma)
 
         assert preds.shape == (3, self.height, self.width, self.depth)
+
+
+class TestGaussian2DResponseModel(TestSetup):
+    """Tests for Gaussian2DResponseModel."""
+
+    num_frames: int = 10
+
+    @pytest.fixture
+    def response_model(self):
+        """Response model object."""
+        return Gaussian2DResponseModel()
+
+    @pytest.fixture
+    def stimulus(self, grid_2d: np.ndarray):
+        """2D stimulus object."""
+        design = np.ones((self.num_frames, self.height, self.width))
+
+        return Stimulus(
+            design=design,
+            grid=grid_2d,
+            dimension_labels=["y", "x"],
+        )
+
+    def test_parameter_names(self, response_model: Gaussian2DResponseModel):
+        """Test that correct parameter names are returned."""
+        # Order of parameter names does not matter
+        assert set(response_model.parameter_names) & {"mu_y", "mu_x", "sigma"}
+
+    def test_predict(self, response_model: Gaussian2DResponseModel, stimulus: Stimulus):
+        """Test that response prediction returns correct shape."""
+        # 3 voxels
+        params = pd.DataFrame(
+            {
+                "mu_x": [0.0, 1.0, 0.0],
+                "mu_y": [1.0, 0.0, 0.0],
+                "sigma": [1.0, 2.0, 3.0],
+            },
+        )
+        preds = np.asarray(response_model(stimulus, params))
+
+        # Check result shape
+        assert preds.shape == (3, self.height, self.width)  # (num_voxels, height, width)
