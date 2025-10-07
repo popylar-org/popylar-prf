@@ -3,15 +3,15 @@
 import numpy as np
 import pandas as pd
 import pytest
-from popylar_prf.models.base import ParameterBatchDimensionError
-from popylar_prf.models.base import ParameterShapeError
-from popylar_prf.models.gaussian import Gaussian2DResponseModel
-from popylar_prf.models.gaussian import GridMuDimensionsError
-from popylar_prf.models.gaussian import _check_gaussian_args
-from popylar_prf.models.gaussian import _expand_gaussian_args
-from popylar_prf.models.gaussian import predict_gaussian_response
-from popylar_prf.stimulus import GridDimensionsError
-from popylar_prf.stimulus import Stimulus
+from prfmodel.models.base import ParameterBatchDimensionError
+from prfmodel.models.base import ParameterShapeError
+from prfmodel.models.gaussian import Gaussian2DResponseModel
+from prfmodel.models.gaussian import GridMuDimensionsError
+from prfmodel.models.gaussian import _check_gaussian_args
+from prfmodel.models.gaussian import _expand_gaussian_args
+from prfmodel.models.gaussian import predict_gaussian_response
+from prfmodel.stimulus import GridDimensionsError
+from prfmodel.stimulus import Stimulus
 
 
 class TestCheckGaussianArgs:

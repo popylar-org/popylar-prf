@@ -5,10 +5,10 @@ import pytest
 
 # Needs to be imported to recreate stimulus from repr
 from numpy import array  # noqa: F401
-from popylar_prf.stimulus import DimensionLabelsError
-from popylar_prf.stimulus import GridDesignShapeError
-from popylar_prf.stimulus import GridDimensionsError
-from popylar_prf.stimulus import Stimulus
+from prfmodel.stimulus import DimensionLabelsError
+from prfmodel.stimulus import GridDesignShapeError
+from prfmodel.stimulus import GridDimensionsError
+from prfmodel.stimulus import Stimulus
 
 
 def test_grid_design_shape_error():
