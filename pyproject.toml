@@ -29,7 +29,7 @@ dependencies = ["keras", "numpy", "pandas", "scipy"]
 description = "A modern Python implementation for population receptive field modelling."
 keywords = [""]
 license = {file = "LICENSE"}
-name = "popylar_prf"
+name = "prfmodel"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
 version = "0.0.1"
@@ -62,8 +62,8 @@ jax = ["jax"]
 tensorflow = ["tensorflow"]
 
 [project.urls]
-Repository = "https://github.com/popylar-org/popylar_prf"
-Issues = "https://github.com/popylar-org/popylar_prf/issues"
+Repository = "https://github.com/popylar-org/prfmodel"
+Issues = "https://github.com/popylar-org/prfmodel/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -71,7 +71,7 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["src/popylar_prf"]
+source = ["src/prfmodel"]
 command_line = "-m pytest"
 
 [tool.tox]
@@ -123,7 +123,7 @@ pydocstyle.convention = "numpy"
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["popylar_prf"]
+known-first-party = ["prfmodel"]
 force-single-line = true
 no-lines-before = ["future","standard-library","third-party","first-party","local-folder"]
 
@@ -131,7 +131,7 @@ no-lines-before = ["future","standard-library","third-party","first-party","loca
 current_version = "0.0.1"
 
 [[tool.bumpversion.files]]
-filename = "src/popylar_prf/__init__.py"
+filename = "src/prfmodel/__init__.py"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"

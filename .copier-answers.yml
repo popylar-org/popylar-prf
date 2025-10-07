@@ -19,7 +19,7 @@ full_name: Malte Luken
 github_organization: popylar-org
 keywords: ''
 license: Apachev2
-package_name: popylar_prf
+package_name: prfmodel
 package_short_description: A modern Python implementation for population receptive
     field model fitting.
 template_profile: ask

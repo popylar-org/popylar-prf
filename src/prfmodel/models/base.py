@@ -4,8 +4,8 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Sequence
 import pandas as pd
-from popylar_prf.stimulus import Stimulus
-from popylar_prf.typing import Tensor
+from prfmodel.stimulus import Stimulus
+from prfmodel.typing import Tensor
 
 _MIN_PARAMETER_DIM = 2
 
