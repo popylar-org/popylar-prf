@@ -7,9 +7,9 @@ from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
+from .base import BasePRFResponse
 from .base import BatchDimensionError
 from .base import ParameterShapeError
-from .base import ResponseModel
 
 
 class GridMuDimensionsError(Exception):
@@ -150,7 +150,7 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
     return ops.exp(-resp)
 
 
-class Gaussian2DResponseModel(ResponseModel):
+class Gaussian2DResponse(BasePRFResponse):
     """
     Two-dimensional isotropic Gaussian population receptive field response model.
 
@@ -183,7 +183,7 @@ class Gaussian2DResponseModel(ResponseModel):
     >>>     dimension_labels=("y", "x"),
     >>> )
     >>> # Create model instance
-    >>> model = Gaussian2DResponseModel()
+    >>> model = Gaussian2DResponse()
     >>> # Predict response to stimulus grid
     >>> resp = model(stimulus, params)
     >>> print(resp.shape) # (num_voxels, num_y, num_x)

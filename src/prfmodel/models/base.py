@@ -81,7 +81,7 @@ class BaseModel(ABC):
         """A list with names of parameters that are used by the model."""
 
 
-class ResponseModel(BaseModel):
+class BasePRFResponse(BaseModel):
     """
     Abstract base class for population receptive field response models.
 

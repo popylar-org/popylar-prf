@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from prfmodel.models.base import BatchDimensionError
 from prfmodel.models.base import ParameterShapeError
-from prfmodel.models.gaussian import Gaussian2DResponseModel
+from prfmodel.models.gaussian import Gaussian2DResponse
 from prfmodel.models.gaussian import GridMuDimensionsError
 from prfmodel.models.gaussian import _check_gaussian_args
 from prfmodel.models.gaussian import _expand_gaussian_args
@@ -168,15 +168,15 @@ class TestPredictGaussianResponse(TestSetup):
         assert preds.shape == (3, self.height, self.width, self.depth)
 
 
-class TestGaussian2DResponseModel(TestSetup):
-    """Tests for Gaussian2DResponseModel."""
+class TestGaussian2DResponse(TestSetup):
+    """Tests for Gaussian2DResponse class."""
 
     num_frames: int = 10
 
     @pytest.fixture
     def response_model(self):
         """Response model object."""
-        return Gaussian2DResponseModel()
+        return Gaussian2DResponse()
 
     @pytest.fixture
     def stimulus(self, grid_2d: np.ndarray):
@@ -189,12 +189,12 @@ class TestGaussian2DResponseModel(TestSetup):
             dimension_labels=["y", "x"],
         )
 
-    def test_parameter_names(self, response_model: Gaussian2DResponseModel):
+    def test_parameter_names(self, response_model: Gaussian2DResponse):
         """Test that correct parameter names are returned."""
         # Order of parameter names does not matter
         assert set(response_model.parameter_names) & {"mu_y", "mu_x", "sigma"}
 
-    def test_predict(self, response_model: Gaussian2DResponseModel, stimulus: Stimulus):
+    def test_predict(self, response_model: Gaussian2DResponse, stimulus: Stimulus):
         """Test that response prediction returns correct shape."""
         # 3 voxels
         params = pd.DataFrame(
