@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "popylar_prf"
+project = "prfmodel"
 copyright = "2025, Netherlands eScience Center, Vrije Universiteit Amsterdam, Netherlands Institute for Neuroscience"
 author = "Malte Lüken, Flavio Hafner, Gilles de Hollander, Tomas Knapen"
 
@@ -61,7 +61,7 @@ todo_include_todos = False
 
 # -- Use autoapi.extension to run sphinx-apidoc -------
 
-autoapi_dirs = ["../src/popylar_prf"]
+autoapi_dirs = ["../src/prfmodel"]
 autoapi_options = [
     "members",
     "inherited-members",
