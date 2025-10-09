@@ -5,7 +5,7 @@ from prfmodel.models.base import BaseImpulse
 from prfmodel.models.base import BaseModel
 from prfmodel.models.base import BasePRFResponse
 from prfmodel.models.base import BatchDimensionError
-from prfmodel.models.base import ParameterShapeError
+from prfmodel.models.base import ShapeError
 
 
 def test_parameter_shape_error():
@@ -13,8 +13,8 @@ def test_parameter_shape_error():
     param_name = "param_1"
     param_shape = 1
 
-    with pytest.raises(ParameterShapeError) as excinfo:
-        raise ParameterShapeError(param_name, param_shape)
+    with pytest.raises(ShapeError) as excinfo:
+        raise ShapeError(param_name, param_shape)
 
     assert param_name in str(excinfo.value)
     assert str(param_shape) in str(excinfo.value)

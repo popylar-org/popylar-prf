@@ -31,22 +31,22 @@ class BatchDimensionError(Exception):
         super().__init__(f"Arguments {names} have different sizes in batch (first) dimension: {shapes}")
 
 
-class ParameterShapeError(Exception):
+class ShapeError(Exception):
     """
-    Exception raised when a model parameter has less than two dimensions.
+    Exception raised when an argument has less than two dimensions.
 
     Parameters
     ----------
-    parameter_name: str
-        Parameter name.
-    parameter_shape: tuple of int
-        Parameter shape.
+    arg_name: str
+        Argument name.
+    arg_shape: tuple of int
+        Argument shape.
 
     """
 
-    def __init__(self, parameter_name: str, parameter_shape: tuple[int, ...]):
+    def __init__(self, arg_name: str, arg_shape: tuple[int, ...]):
         super().__init__(
-            f"Parameter {parameter_name} must have at least two dimensions but has shape {parameter_shape}",
+            f"Argument {arg_name} must have at least two dimensions but has shape {arg_shape}",
         )
 
 

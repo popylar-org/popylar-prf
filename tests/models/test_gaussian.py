@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from prfmodel.models.base import BatchDimensionError
-from prfmodel.models.base import ParameterShapeError
+from prfmodel.models.base import ShapeError
 from prfmodel.models.gaussian import Gaussian2DResponse
 from prfmodel.models.gaussian import GridMuDimensionsError
 from prfmodel.models.gaussian import _check_gaussian_args
@@ -46,13 +46,13 @@ class TestCheckGaussianArgs:
         grid = np.ones((4, 1))
         mu = np.ones(1)  # Less than two dimensions
         sigma = np.ones((3, 1))
-        with pytest.raises(ParameterShapeError):
+        with pytest.raises(ShapeError):
             _check_gaussian_args(grid, mu, sigma)
 
         mu = np.ones((3, 1))
         sigma = np.ones(3)  # Less than two dimensions
 
-        with pytest.raises(ParameterShapeError):
+        with pytest.raises(ShapeError):
             _check_gaussian_args(grid, mu, sigma)
 
 
