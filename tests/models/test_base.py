@@ -2,9 +2,9 @@
 
 import pytest
 from prfmodel.models.base import BaseModel
+from prfmodel.models.base import BasePRFResponse
 from prfmodel.models.base import BatchDimensionError
 from prfmodel.models.base import ParameterShapeError
-from prfmodel.models.base import ResponseModel
 
 
 def test_parameter_shape_error():
@@ -44,7 +44,7 @@ class TestBaseModel:
 
 
 # Inherit all checks from TestBaseModel
-class TestResponseModel(TestBaseModel):
-    """Tests for ResponseModel class."""
+class TestBasePRFResponse(TestBaseModel):
+    """Tests for BasePRFResponse class."""
 
-    model_class = ResponseModel
+    model_class = BasePRFResponse
