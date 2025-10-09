@@ -9,7 +9,7 @@ from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
 from .base import BasePRFResponse
 from .base import BatchDimensionError
-from .base import ParameterShapeError
+from .base import ShapeError
 
 
 class GridMuDimensionsError(Exception):
@@ -36,15 +36,15 @@ def _check_gaussian_args(grid: Tensor, mu: Tensor, sigma: Tensor) -> None:
         raise GridDimensionsError(grid.shape)
 
     if len(mu.shape) < _MIN_PARAMETER_DIM:
-        raise ParameterShapeError(
-            parameter_name="mu",
-            parameter_shape=mu.shape,
+        raise ShapeError(
+            arg_name="mu",
+            arg_shape=mu.shape,
         )
 
     if len(sigma.shape) < _MIN_PARAMETER_DIM:
-        raise ParameterShapeError(
-            parameter_name="sigma",
-            parameter_shape=sigma.shape,
+        raise ShapeError(
+            arg_name="sigma",
+            arg_shape=sigma.shape,
         )
 
     if grid.shape[-1] != mu.shape[-1]:
