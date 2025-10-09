@@ -1,9 +1,11 @@
 """Population receptive field models."""
 
 from .base import BaseModel
-from .base import ResponseModel
+from .base import BasePRFResponse
+from .encoding import Encoder
 
 __all__ = [
     "BaseModel",
-    "ResponseModel",
+    "BasePRFResponse",
+    "Encoder",
 ]
