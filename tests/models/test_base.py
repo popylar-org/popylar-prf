@@ -1,6 +1,7 @@
 """Test model base classes."""
 
 import pytest
+from prfmodel.models.base import BaseImpulse
 from prfmodel.models.base import BaseModel
 from prfmodel.models.base import BasePRFResponse
 from prfmodel.models.base import BatchDimensionError
@@ -48,3 +49,9 @@ class TestBasePRFResponse(TestBaseModel):
     """Tests for BasePRFResponse class."""
 
     model_class = BasePRFResponse
+
+
+class TestBaseImpulse(TestBaseModel):
+    """Tests for BaseImpulse class."""
+
+    model_class = BaseImpulse
