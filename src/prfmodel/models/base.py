@@ -78,7 +78,7 @@ class BaseModel(ABC):
 
     @property
     @abstractmethod
-    def parameter_names(self) -> list:
+    def parameter_names(self) -> list[str]:
         """A list with names of parameters that are used by the model."""
 
 
