@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from prfmodel.models.base import ParameterBatchDimensionError
+from prfmodel.models.base import BatchDimensionError
 from prfmodel.models.base import ParameterShapeError
 from prfmodel.models.gaussian import Gaussian2DResponseModel
 from prfmodel.models.gaussian import GridMuDimensionsError
@@ -34,11 +34,11 @@ class TestCheckGaussianArgs:
             _check_gaussian_args(grid, mu, sigma)
 
     def test_parameter_size_error(self):
-        """Test that ParameterSizeError is raised."""
+        """Test that BatchDimensionError is raised."""
         grid = np.ones((4, 5, 2))
         mu = np.ones((2, 2))
         sigma = np.ones((3, 1))  # Mismatch in first axis
-        with pytest.raises(ParameterBatchDimensionError):
+        with pytest.raises(BatchDimensionError):
             _check_gaussian_args(grid, mu, sigma)
 
     def test_parameter_shape_error(self):

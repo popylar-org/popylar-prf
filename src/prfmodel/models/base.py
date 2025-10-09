@@ -10,24 +10,24 @@ from prfmodel.typing import Tensor
 _MIN_PARAMETER_DIM = 2
 
 
-class ParameterBatchDimensionError(Exception):
+class BatchDimensionError(Exception):
     """
-    Exception raised when model parameters have different sizes in the batch (first) dimension.
+    Exception raised when arguments have different sizes in the batch (first) dimension.
 
     Parameters
     ----------
-    parameter_names: Sequence[str]
-        Names of parameters that have different sizes in batch dimension.
-    parameter_shapes: Sequence[tuple of int]
-        Shapes of parameters that have different sizes in batch dimension.
+    arg_names: Sequence[str]
+        Names of arguments that have different sizes in batch dimension.
+    arg_shapes: Sequence[tuple of int]
+        Shapes of arguments that have different sizes in batch dimension.
 
     """
 
-    def __init__(self, parameter_names: Sequence[str], parameter_shapes: Sequence[tuple[int, ...]]):
-        names = ", ".join(parameter_names)
-        shapes = ", ".join([str(s[0]) for s in parameter_shapes])
+    def __init__(self, arg_names: Sequence[str], arg_shapes: Sequence[tuple[int, ...]]):
+        names = ", ".join(arg_names)
+        shapes = ", ".join([str(s[0]) for s in arg_shapes])
 
-        super().__init__(f"Parameters {names} have different sizes in batch (first) dimension: {shapes}")
+        super().__init__(f"Arguments {names} have different sizes in batch (first) dimension: {shapes}")
 
 
 class ParameterShapeError(Exception):

@@ -7,7 +7,7 @@ from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
-from .base import ParameterBatchDimensionError
+from .base import BatchDimensionError
 from .base import ParameterShapeError
 from .base import ResponseModel
 
@@ -51,9 +51,9 @@ def _check_gaussian_args(grid: Tensor, mu: Tensor, sigma: Tensor) -> None:
         raise GridMuDimensionsError(grid.shape, mu.shape)
 
     if mu.shape[0] != sigma.shape[0]:
-        raise ParameterBatchDimensionError(
-            parameter_names=("mu", "sigma"),
-            parameter_shapes=(mu.shape, sigma.shape),
+        raise BatchDimensionError(
+            arg_names=("mu", "sigma"),
+            arg_shapes=(mu.shape, sigma.shape),
         )
 
 
@@ -101,12 +101,12 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
 
     Raises
     ------
+    BatchDimensionError
+        If `mu` and `sigma` have batch (first) dimensions with different sizes.
     GridDimensionsError
         If the grid has mismatching dimensions.
     GridMuDimensionsError
         If the grid and mu dimensions do not match.
-    ParameterBatchDimensionError
-        If `mu` and `sigma` have batch (first) dimensions with different sizes.
     ParameterShapeError
         If `mu` or `sigma` have less than two dimensions.
 
