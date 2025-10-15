@@ -2,10 +2,10 @@
 
 import pandas as pd
 from keras import ops
-from popylar_prf.stimulus import GridDimensionsError
-from popylar_prf.stimulus import Stimulus
-from popylar_prf.typing import Tensor
-from popylar_prf.utils import convert_parameters_to_tensor
+from prfmodel.stimulus import GridDimensionsError
+from prfmodel.stimulus import Stimulus
+from prfmodel.typing import Tensor
+from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
 from .base import ParameterBatchDimensionError
 from .base import ParameterShapeError
@@ -161,7 +161,7 @@ class Gaussian2DResponseModel(ResponseModel):
     --------
     >>> import numpy as np
     >>> import pandas as pd
-    >>> from popylar_prf.stimulus import Stimulus
+    >>> import prfmodel as pm
     >>> # Define a 2D grid
     >>> num_x, num_y = 20, 10
     >>> x = np.linspace(-3, 3, num_x)
@@ -177,7 +177,7 @@ class Gaussian2DResponseModel(ResponseModel):
     >>> # Define dummy design for 10 frames
     >>> design = np.ones(10, num_y, num_x)
     >>> # Create stimulus object
-    >>> stimulus = Stimulus(
+    >>> stimulus = pm.Stimulus(
     >>>     design=design,
     >>>     grid=grid,
     >>>     dimension_labels=("y", "x"),

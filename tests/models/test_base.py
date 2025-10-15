@@ -1,10 +1,10 @@
 """Test model base classes."""
 
 import pytest
-from popylar_prf.models.base import BaseModel
-from popylar_prf.models.base import ParameterBatchDimensionError
-from popylar_prf.models.base import ParameterShapeError
-from popylar_prf.models.base import ResponseModel
+from prfmodel.models.base import BaseModel
+from prfmodel.models.base import ParameterBatchDimensionError
+from prfmodel.models.base import ParameterShapeError
+from prfmodel.models.base import ResponseModel
 
 
 def test_parameter_shape_error():
