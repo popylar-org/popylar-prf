@@ -7,9 +7,14 @@ from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
+from .base import BaseImpulse
 from .base import BasePRFResponse
+from .base import BaseTemporal
 from .base import BatchDimensionError
 from .base import ShapeError
+from .composite import DefaultImpulse
+from .composite import DefaultTemporal
+from .composite import SimplePRFModel
 
 
 class GridMuDimensionsError(Exception):
@@ -220,3 +225,42 @@ class Gaussian2DResponse(BasePRFResponse):
         grid = ops.convert_to_tensor(stimulus.grid)
 
         return predict_gaussian_response(grid, mu, sigma)
+
+
+class Gaussian2DPRFModel(SimplePRFModel):
+    """
+    Two-dimensional isotropic Gaussian population receptive field model.
+
+    This is a generic class that combines a 2D isotropic Gaussian population receptive field, impulse,
+    and temporal model response.
+
+    Parameters
+    ----------
+    impulse_model : BaseImpulse or None, default=DefaultImpulse, optional
+        An impulse response model instance. The default is a `TwoGammaImpulse` instance with default
+        values.
+    temporal_model : BaseTemporal or None, default=DefaultTemporal, optional
+        An temporal model instance. The default is a `BaselineAmplitude` instance.
+
+    Notes
+    -----
+    The simple composite model follows five steps:
+
+    1. The 2D Gaussian population receptive field response model makes a prediction for the stimulus grid.
+    2. The response is encoded with the stimulus design.
+    3. A impulse response model generates an impulse response.
+    4. The encoded response is convolved with the impulse response.
+    5. The temporal model modifies the convolved response.
+
+    """
+
+    def __init__(
+        self,
+        impulse_model: BaseImpulse | None = DefaultImpulse,
+        temporal_model: BaseTemporal | None = DefaultTemporal,
+    ):
+        super().__init__(
+            prf_model=Gaussian2DResponse(),
+            impulse_model=impulse_model,
+            temporal_model=temporal_model,
+        )
