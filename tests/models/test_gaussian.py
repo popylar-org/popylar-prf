@@ -5,11 +5,14 @@ import pandas as pd
 import pytest
 from prfmodel.models.base import BatchDimensionError
 from prfmodel.models.base import ShapeError
+from prfmodel.models.gaussian import Gaussian2DPRFModel
 from prfmodel.models.gaussian import Gaussian2DResponse
 from prfmodel.models.gaussian import GridMuDimensionsError
 from prfmodel.models.gaussian import _check_gaussian_args
 from prfmodel.models.gaussian import _expand_gaussian_args
 from prfmodel.models.gaussian import predict_gaussian_response
+from prfmodel.models.impulse import TwoGammaImpulse
+from prfmodel.models.linear import BaselineAmplitude
 from prfmodel.stimulus import GridDimensionsError
 from prfmodel.stimulus import Stimulus
 
@@ -204,7 +207,96 @@ class TestGaussian2DResponse(TestSetup):
                 "sigma": [1.0, 2.0, 3.0],
             },
         )
+
         preds = np.asarray(response_model(stimulus, params))
 
         # Check result shape
-        assert preds.shape == (3, self.height, self.width)  # (num_voxels, height, width)
+        assert preds.shape == (params.shape[0], self.height, self.width)  # (num_voxels, height, width)
+
+
+class TestGaussian2DPRFModel(TestGaussian2DResponse):
+    """Tests for the Gaussian2DPRFModel class."""
+
+    @pytest.fixture
+    def prf_model(self):
+        """PRF model object."""
+        return Gaussian2DPRFModel()
+
+    @pytest.fixture
+    def impulse_model(self):
+        """Impulse response model object."""
+        return TwoGammaImpulse()
+
+    @pytest.fixture
+    def linear_model(self):
+        """Linear model object."""
+        return BaselineAmplitude()
+
+    @pytest.fixture
+    def params(self):
+        """Dataframe with parameters."""
+        return pd.DataFrame(
+            {
+                "mu_x": [0.0, 1.0, 0.0],
+                "mu_y": [1.0, 0.0, 0.0],
+                "sigma": [1.0, 2.0, 3.0],
+                "shape_1": [6.0, 7.0, 5.0],
+                "rate_1": [0.9, 1.0, 0.8],
+                "shape_2": [7.0, 6.0, 5.0],
+                "rate_2": [0.9, 1.0, 0.8],
+                "weight": [0.35, 0.25, 0.45],
+                "baseline": [0.0, 0.1, 0.2],
+                "amplitude": [1.1, 1.0, 0.9],
+            },
+        )
+
+    def test_parameter_names(
+        self,
+        prf_model: Gaussian2DPRFModel,
+        impulse_model: TwoGammaImpulse,
+        linear_model: BaselineAmplitude,
+        response_model: Gaussian2DResponse,
+    ):
+        """Test that parameter names of composite model match parameter names of submodels."""
+        param_names = response_model.parameter_names
+        param_names.extend(impulse_model.parameter_names)
+        param_names.extend(linear_model.parameter_names)
+
+        assert prf_model.parameter_names == list(set(param_names))
+
+    def test_predict(self, prf_model: Gaussian2DPRFModel, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction returns correct shape."""
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)
+
+    def test_predict_without_linear(self, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction works without linear model."""
+        prf_model = Gaussian2DPRFModel(
+            linear_model=None,
+        )
+
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)
+
+    def test_predict_without_impulse(self, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction works without impulse response model."""
+        prf_model = Gaussian2DPRFModel(
+            impulse_model=None,
+        )
+
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)
+
+    def test_predict_without_linear_impulse(self, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction works without impulse resonse and linear model."""
+        prf_model = Gaussian2DPRFModel(
+            impulse_model=None,
+            linear_model=None,
+        )
+
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)

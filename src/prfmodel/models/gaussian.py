@@ -7,9 +7,12 @@ from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
+from .base import BaseImpulse
+from .base import BaseModel
 from .base import BasePRFResponse
 from .base import BatchDimensionError
 from .base import ShapeError
+from .composite import SimplePRFModel
 
 
 class GridMuDimensionsError(Exception):
@@ -220,3 +223,43 @@ class Gaussian2DResponse(BasePRFResponse):
         grid = ops.convert_to_tensor(stimulus.grid)
 
         return predict_gaussian_response(grid, mu, sigma)
+
+
+class Gaussian2DPRFModel(SimplePRFModel):
+    """
+    Two-dimensional isotropic Gaussian population receptive field model.
+
+    This is a generic class that combines a 2D isotropic Gaussian population receptive field, impulse,
+    and linear response.
+
+    Parameters
+    ----------
+    impulse_model : str or BaseImpulse or None, default="default", optional
+        An impulse response model instance. Can also be `"default"` to use a `TwoGammaImpulse` instance with default
+        values.
+    linear_model : str or BaseModel or None, default="default", optional
+        An linear response model instance. Can also be `"default"` to use a `BaselineAmplitude` instance with default
+        values.
+
+    Notes
+    -----
+    The simple composite model follows five steps:
+
+    1. The 2D Gaussian population receptive field response model makes a prediction for the stimulus grid.
+    2. The response is encoded with the stimulus design.
+    3. A impulse response model generates an impulse response.
+    4. The encoded response is convolved with the impulse response.
+    5. The linear model modifies the convolved response.
+
+    """
+
+    def __init__(
+        self,
+        impulse_model: str | BaseImpulse | None = "default",
+        linear_model: str | BaseModel | None = "default",
+    ):
+        super().__init__(
+            prf_model=Gaussian2DResponse(),
+            impulse_model=impulse_model,
+            linear_model=linear_model,
+        )
