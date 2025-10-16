@@ -215,9 +215,73 @@ class BaseTemporal(BaseModel):
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different batches.
 
+        """
+
+
+class BasePRFModel(BaseModel):
+    """
+    Abstract base class for creating composite population receptive field models.
+
+    Cannot be instantiated on its own.
+    Can only be used as a parent class for creating custom composite population receptive field models.
+    Subclasses must override the `__call__` method.
+    This class is intented for combining multiple submodels into a composite model with a custom `__call__`
+    method that defines how the submodels interact to make a composite prediction.
+
+    #TODO: Link to Example on how to create custom composite models.
+
+    Parameters
+    ----------
+    **models
+        Submodels to be combined into the composite model. All submodel classes must inherit from `BaseModel`.
+
+    Raises
+    ------
+    TypeError
+        If submodel classes do not inherit from `BaseModel`.
+
+    """
+
+    def __init__(self, **models: BaseModel | None):
+        super().__init__()
+
+        for model in models.values():
+            if model is not None and not issubclass(model.__class__, BaseModel):
+                msg = "Model instance must inherit from BaseModel"
+                raise TypeError(msg)
+
+        self.models = models
+
+    @property
+    def parameter_names(self) -> list[str]:
+        """A list with names of unique parameters that are used by the submodels."""
+        param_names = []
+
+        for model in self.models.values():
+            if model is not None:
+                param_names.extend(model.parameter_names)
+
+        # Make sure no duplicates are returned
+        return list(set(param_names))
+
+    @abstractmethod
+    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame) -> Tensor:
+        """
+        Predict a composite population receptive field response to a stimulus.
+
+        Parameters
+        ----------
+        stimulus : Stimulus
+            Stimulus object.
+        parameters : pandas.DataFrame
+            Dataframe with columns containing different (sub-) model parameters and rows containing parameter values
+            for different voxels.
+
         Returns
         -------
         Tensor
             Model predictions with the same shape as `inputs`.
+            Model predictions of shape (num_voxels, num_frames). The number of voxels is the number of rows in
+            `parameters`. The number of frames is the number of frames in the stimulus design.
 
         """
