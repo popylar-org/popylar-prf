@@ -188,3 +188,36 @@ class BaseImpulse(BaseModel):
             `parameters`.
 
         """
+
+
+class BaseTemporal(BaseModel):
+    """
+    Abstract base class for temporal models.
+
+    Cannot be instantiated on its own.
+    Can only be used as a parent class to create custom temporal models.
+    Subclasses must override the abstract `__call__` method.
+
+    #TODO: Link to Example on how to create custom temporal models.
+
+    """
+
+    @abstractmethod
+    def __call__(self, inputs: Tensor, parameters: pd.DataFrame) -> Tensor:
+        """
+        Make predictions with the temporal model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            Input tensor with temporal response and shape (num_batches, num_frames).
+        parameters : pandas.DataFrame
+            Dataframe with columns containing different model parameters and rows containing parameter values
+            for different batches.
+
+        Returns
+        -------
+        Tensor
+            Model predictions with the same shape as `inputs`.
+
+        """
