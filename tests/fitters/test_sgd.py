@@ -1,0 +1,82 @@
+"""Tests for stochastic gradient descent fitting."""
+
+import keras
+import numpy as np
+import pandas as pd
+import pytest
+from prfmodel.fitters.sgd import SGDFitter
+from prfmodel.fitters.sgd import SGDHistory
+from prfmodel.models.gaussian import Gaussian2DPRFModel
+from prfmodel.stimulus import Stimulus
+from prfmodel.typing import Tensor
+from .conftest import TestSetup
+
+
+class TestSGDFitter(TestSetup):
+    """Tests for SGDFitter class.
+
+    Uses a `Gaussian2DPRFModel` model with a `keras.optimizers.Adam` optimizer and `keras.losses.MeanSquaredError` loss
+    as a test case.
+
+    """
+
+    num_steps: int = 10
+
+    def _check_history(self, history: SGDHistory) -> None:
+        assert isinstance(history, SGDHistory)
+        assert history.step == list(range(self.num_steps))
+        assert isinstance(history.history, dict)
+        assert all(isinstance(x, Tensor) for x in history.history["loss"])
+
+    def _check_sgd_params(self, result_params: pd.DataFrame, params: pd.DataFrame) -> None:
+        assert isinstance(result_params, pd.DataFrame)
+        assert result_params.shape == params.shape
+
+    @pytest.mark.parametrize(
+        ("optimizer", "loss"),
+        [(None, None), (keras.optimizers.Adam(), keras.losses.MeanSquaredError())],
+    )
+    def test_fit(
+        self,
+        stimulus: Stimulus,
+        model: Gaussian2DPRFModel,
+        optimizer: keras.optimizers.Optimizer,
+        loss: keras.losses.Loss,
+        params: pd.DataFrame,
+    ):
+        """Test that fit returns parameters with the correct shape."""
+        fitter = SGDFitter(
+            model=model,
+            stimulus=stimulus,
+            optimizer=optimizer,
+            loss=loss,
+        )
+
+        observed = model(stimulus, params)
+
+        history, sgd_params = fitter.fit(observed, params, num_steps=self.num_steps)
+
+        self._check_history(history)
+        self._check_sgd_params(sgd_params, params)
+
+    def test_fit_fixed_params(
+        self,
+        stimulus: Stimulus,
+        model: Gaussian2DPRFModel,
+        params: pd.DataFrame,
+    ):
+        """Test that fit with fixed parameters returns parameters with the correct shape and fixed values."""
+        fitter = SGDFitter(
+            model=model,
+            stimulus=stimulus,
+        )
+
+        observed = model(stimulus, params)
+
+        fixed = ["baseline", "amplitude"]
+
+        history, sgd_params = fitter.fit(observed, params, fixed_parameters=fixed, num_steps=self.num_steps)
+
+        self._check_history(history)
+        self._check_sgd_params(sgd_params, params)
+        assert np.all(sgd_params[fixed] == params[fixed])
