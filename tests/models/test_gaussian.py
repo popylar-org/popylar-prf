@@ -3,15 +3,18 @@
 import numpy as np
 import pandas as pd
 import pytest
-from popylar_prf.models.base import ParameterBatchDimensionError
-from popylar_prf.models.base import ParameterShapeError
-from popylar_prf.models.gaussian import Gaussian2DResponseModel
-from popylar_prf.models.gaussian import GridMuDimensionsError
-from popylar_prf.models.gaussian import _check_gaussian_args
-from popylar_prf.models.gaussian import _expand_gaussian_args
-from popylar_prf.models.gaussian import predict_gaussian_response
-from popylar_prf.stimulus import GridDimensionsError
-from popylar_prf.stimulus import Stimulus
+from prfmodel.models.base import BatchDimensionError
+from prfmodel.models.base import ShapeError
+from prfmodel.models.gaussian import Gaussian2DPRFModel
+from prfmodel.models.gaussian import Gaussian2DResponse
+from prfmodel.models.gaussian import GridMuDimensionsError
+from prfmodel.models.gaussian import _check_gaussian_args
+from prfmodel.models.gaussian import _expand_gaussian_args
+from prfmodel.models.gaussian import predict_gaussian_response
+from prfmodel.models.impulse import TwoGammaImpulse
+from prfmodel.models.temporal import BaselineAmplitude
+from prfmodel.stimulus import GridDimensionsError
+from prfmodel.stimulus import Stimulus
 
 
 class TestCheckGaussianArgs:
@@ -34,11 +37,11 @@ class TestCheckGaussianArgs:
             _check_gaussian_args(grid, mu, sigma)
 
     def test_parameter_size_error(self):
-        """Test that ParameterSizeError is raised."""
+        """Test that BatchDimensionError is raised."""
         grid = np.ones((4, 5, 2))
         mu = np.ones((2, 2))
         sigma = np.ones((3, 1))  # Mismatch in first axis
-        with pytest.raises(ParameterBatchDimensionError):
+        with pytest.raises(BatchDimensionError):
             _check_gaussian_args(grid, mu, sigma)
 
     def test_parameter_shape_error(self):
@@ -46,13 +49,13 @@ class TestCheckGaussianArgs:
         grid = np.ones((4, 1))
         mu = np.ones(1)  # Less than two dimensions
         sigma = np.ones((3, 1))
-        with pytest.raises(ParameterShapeError):
+        with pytest.raises(ShapeError):
             _check_gaussian_args(grid, mu, sigma)
 
         mu = np.ones((3, 1))
         sigma = np.ones(3)  # Less than two dimensions
 
-        with pytest.raises(ParameterShapeError):
+        with pytest.raises(ShapeError):
             _check_gaussian_args(grid, mu, sigma)
 
 
@@ -168,15 +171,15 @@ class TestPredictGaussianResponse(TestSetup):
         assert preds.shape == (3, self.height, self.width, self.depth)
 
 
-class TestGaussian2DResponseModel(TestSetup):
-    """Tests for Gaussian2DResponseModel."""
+class TestGaussian2DResponse(TestSetup):
+    """Tests for Gaussian2DResponse class."""
 
     num_frames: int = 10
 
     @pytest.fixture
     def response_model(self):
         """Response model object."""
-        return Gaussian2DResponseModel()
+        return Gaussian2DResponse()
 
     @pytest.fixture
     def stimulus(self, grid_2d: np.ndarray):
@@ -189,12 +192,12 @@ class TestGaussian2DResponseModel(TestSetup):
             dimension_labels=["y", "x"],
         )
 
-    def test_parameter_names(self, response_model: Gaussian2DResponseModel):
+    def test_parameter_names(self, response_model: Gaussian2DResponse):
         """Test that correct parameter names are returned."""
         # Order of parameter names does not matter
         assert set(response_model.parameter_names) & {"mu_y", "mu_x", "sigma"}
 
-    def test_predict(self, response_model: Gaussian2DResponseModel, stimulus: Stimulus):
+    def test_predict(self, response_model: Gaussian2DResponse, stimulus: Stimulus):
         """Test that response prediction returns correct shape."""
         # 3 voxels
         params = pd.DataFrame(
@@ -204,7 +207,104 @@ class TestGaussian2DResponseModel(TestSetup):
                 "sigma": [1.0, 2.0, 3.0],
             },
         )
+
         preds = np.asarray(response_model(stimulus, params))
 
         # Check result shape
-        assert preds.shape == (3, self.height, self.width)  # (num_voxels, height, width)
+        assert preds.shape == (params.shape[0], self.height, self.width)  # (num_voxels, height, width)
+
+
+class TestGaussian2DPRFModel(TestGaussian2DResponse):
+    """Tests for the Gaussian2DPRFModel class."""
+
+    @pytest.fixture
+    def prf_model(self):
+        """PRF model object."""
+        return Gaussian2DPRFModel()
+
+    @pytest.fixture
+    def impulse_model(self):
+        """Impulse response model object."""
+        return TwoGammaImpulse()
+
+    @pytest.fixture
+    def temporal_model(self):
+        """Temporal model object."""
+        return BaselineAmplitude()
+
+    @pytest.fixture
+    def params(self):
+        """Dataframe with parameters."""
+        return pd.DataFrame(
+            {
+                "mu_x": [0.0, 1.0, 0.0],
+                "mu_y": [1.0, 0.0, 0.0],
+                "sigma": [1.0, 2.0, 3.0],
+                "shape_1": [6.0, 7.0, 5.0],
+                "rate_1": [0.9, 1.0, 0.8],
+                "shape_2": [7.0, 6.0, 5.0],
+                "rate_2": [0.9, 1.0, 0.8],
+                "weight": [0.35, 0.25, 0.45],
+                "baseline": [0.0, 0.1, 0.2],
+                "amplitude": [1.1, 1.0, 0.9],
+            },
+        )
+
+    def test_submodels_inherit_basemodel(self):
+        """Test that submodels that do not inherit from BaseModel raise an error."""
+        with pytest.raises(TypeError):
+            Gaussian2DPRFModel(impulse_model="test")
+
+        with pytest.raises(TypeError):
+            Gaussian2DPRFModel(temporal_model="test")
+
+    def test_parameter_names(
+        self,
+        prf_model: Gaussian2DPRFModel,
+        impulse_model: TwoGammaImpulse,
+        temporal_model: BaselineAmplitude,
+        response_model: Gaussian2DResponse,
+    ):
+        """Test that parameter names of composite model match parameter names of submodels."""
+        param_names = response_model.parameter_names
+        param_names.extend(impulse_model.parameter_names)
+        param_names.extend(temporal_model.parameter_names)
+
+        assert prf_model.parameter_names == list(set(param_names))
+
+    def test_predict(self, prf_model: Gaussian2DPRFModel, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction returns correct shape."""
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)
+
+    def test_predict_without_temporal(self, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction works without temporal model."""
+        prf_model = Gaussian2DPRFModel(
+            temporal_model=None,
+        )
+
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)
+
+    def test_predict_without_impulse(self, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction works without impulse response model."""
+        prf_model = Gaussian2DPRFModel(
+            impulse_model=None,
+        )
+
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)
+
+    def test_predict_without_temporal_impulse(self, stimulus: Stimulus, params: pd.DataFrame):
+        """Test that model prediction works without impulse resonse and temporal model."""
+        prf_model = Gaussian2DPRFModel(
+            impulse_model=None,
+            temporal_model=None,
+        )
+
+        resp = prf_model(stimulus, params)
+
+        assert resp.shape == (params.shape[0], self.num_frames)

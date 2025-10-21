@@ -2,14 +2,19 @@
 
 import pandas as pd
 from keras import ops
-from popylar_prf.stimulus import GridDimensionsError
-from popylar_prf.stimulus import Stimulus
-from popylar_prf.typing import Tensor
-from popylar_prf.utils import convert_parameters_to_tensor
+from prfmodel.stimulus import GridDimensionsError
+from prfmodel.stimulus import Stimulus
+from prfmodel.typing import Tensor
+from prfmodel.utils import convert_parameters_to_tensor
 from .base import _MIN_PARAMETER_DIM
-from .base import ParameterBatchDimensionError
-from .base import ParameterShapeError
-from .base import ResponseModel
+from .base import BaseImpulse
+from .base import BasePRFResponse
+from .base import BaseTemporal
+from .base import BatchDimensionError
+from .base import ShapeError
+from .composite import DefaultImpulse
+from .composite import DefaultTemporal
+from .composite import SimplePRFModel
 
 
 class GridMuDimensionsError(Exception):
@@ -36,24 +41,24 @@ def _check_gaussian_args(grid: Tensor, mu: Tensor, sigma: Tensor) -> None:
         raise GridDimensionsError(grid.shape)
 
     if len(mu.shape) < _MIN_PARAMETER_DIM:
-        raise ParameterShapeError(
-            parameter_name="mu",
-            parameter_shape=mu.shape,
+        raise ShapeError(
+            arg_name="mu",
+            arg_shape=mu.shape,
         )
 
     if len(sigma.shape) < _MIN_PARAMETER_DIM:
-        raise ParameterShapeError(
-            parameter_name="sigma",
-            parameter_shape=sigma.shape,
+        raise ShapeError(
+            arg_name="sigma",
+            arg_shape=sigma.shape,
         )
 
     if grid.shape[-1] != mu.shape[-1]:
         raise GridMuDimensionsError(grid.shape, mu.shape)
 
     if mu.shape[0] != sigma.shape[0]:
-        raise ParameterBatchDimensionError(
-            parameter_names=("mu", "sigma"),
-            parameter_shapes=(mu.shape, sigma.shape),
+        raise BatchDimensionError(
+            arg_names=("mu", "sigma"),
+            arg_shapes=(mu.shape, sigma.shape),
         )
 
 
@@ -101,12 +106,12 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
 
     Raises
     ------
+    BatchDimensionError
+        If `mu` and `sigma` have batch (first) dimensions with different sizes.
     GridDimensionsError
         If the grid has mismatching dimensions.
     GridMuDimensionsError
         If the grid and mu dimensions do not match.
-    ParameterBatchDimensionError
-        If `mu` and `sigma` have batch (first) dimensions with different sizes.
     ParameterShapeError
         If `mu` or `sigma` have less than two dimensions.
 
@@ -150,7 +155,7 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
     return ops.exp(-resp)
 
 
-class Gaussian2DResponseModel(ResponseModel):
+class Gaussian2DResponse(BasePRFResponse):
     """
     Two-dimensional isotropic Gaussian population receptive field response model.
 
@@ -161,7 +166,7 @@ class Gaussian2DResponseModel(ResponseModel):
     --------
     >>> import numpy as np
     >>> import pandas as pd
-    >>> from popylar_prf.stimulus import Stimulus
+    >>> import prfmodel as pm
     >>> # Define a 2D grid
     >>> num_x, num_y = 20, 10
     >>> x = np.linspace(-3, 3, num_x)
@@ -177,13 +182,13 @@ class Gaussian2DResponseModel(ResponseModel):
     >>> # Define dummy design for 10 frames
     >>> design = np.ones(10, num_y, num_x)
     >>> # Create stimulus object
-    >>> stimulus = Stimulus(
+    >>> stimulus = pm.Stimulus(
     >>>     design=design,
     >>>     grid=grid,
     >>>     dimension_labels=("y", "x"),
     >>> )
     >>> # Create model instance
-    >>> model = Gaussian2DResponseModel()
+    >>> model = Gaussian2DResponse()
     >>> # Predict response to stimulus grid
     >>> resp = model(stimulus, params)
     >>> print(resp.shape) # (num_voxels, num_y, num_x)
@@ -220,3 +225,42 @@ class Gaussian2DResponseModel(ResponseModel):
         grid = ops.convert_to_tensor(stimulus.grid)
 
         return predict_gaussian_response(grid, mu, sigma)
+
+
+class Gaussian2DPRFModel(SimplePRFModel):
+    """
+    Two-dimensional isotropic Gaussian population receptive field model.
+
+    This is a generic class that combines a 2D isotropic Gaussian population receptive field, impulse,
+    and temporal model response.
+
+    Parameters
+    ----------
+    impulse_model : BaseImpulse or None, default=DefaultImpulse, optional
+        An impulse response model instance. The default is a `TwoGammaImpulse` instance with default
+        values.
+    temporal_model : BaseTemporal or None, default=DefaultTemporal, optional
+        An temporal model instance. The default is a `BaselineAmplitude` instance.
+
+    Notes
+    -----
+    The simple composite model follows five steps:
+
+    1. The 2D Gaussian population receptive field response model makes a prediction for the stimulus grid.
+    2. The response is encoded with the stimulus design.
+    3. A impulse response model generates an impulse response.
+    4. The encoded response is convolved with the impulse response.
+    5. The temporal model modifies the convolved response.
+
+    """
+
+    def __init__(
+        self,
+        impulse_model: BaseImpulse | None = DefaultImpulse,
+        temporal_model: BaseTemporal | None = DefaultTemporal,
+    ):
+        super().__init__(
+            prf_model=Gaussian2DResponse(),
+            impulse_model=impulse_model,
+            temporal_model=temporal_model,
+        )

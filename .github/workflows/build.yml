@@ -89,6 +89,8 @@ jobs:
         run: python -m pytest -v
         env:
           KERAS_BACKEND: ${{ matrix.backend }}
+          JAX_ENABLE_X64: "true"
+
   mypy:
     name: Check types with mypy
     runs-on: 'ubuntu-latest'
