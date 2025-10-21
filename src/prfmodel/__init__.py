@@ -1,9 +1,9 @@
-"""Documentation about popylar_prf."""
+"""Documentation about prfmodel."""
 
 import logging
-from popylar_prf.stimulus import Stimulus
-from popylar_prf.typing import Tensor
-from popylar_prf.utils import convert_parameters_to_tensor
+from prfmodel.stimulus import Stimulus
+from prfmodel.typing import Tensor
+from prfmodel.utils import convert_parameters_to_tensor
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
