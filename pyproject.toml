@@ -57,6 +57,7 @@ dev = [
     "mypy",
     "types-tensorflow",
     "pandas-stubs",
+    "types-tqdm"
 ]
 publishing = [
     "build",
