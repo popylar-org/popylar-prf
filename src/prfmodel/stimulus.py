@@ -90,7 +90,6 @@ class Stimulus:
     Create a stimulus on a 2D grid.
 
     >>> import numpy as np
-    >>> from popylar_prf import Stimulus
     >>> num_frames, width, height = 10, 16, 16
     >>> design = np.ones((num_frames, width, height))
     >>> pixel_size = 0.05

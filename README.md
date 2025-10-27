@@ -4,13 +4,13 @@
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![Linting: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-## How to use popylar_prf
+## How to use prfmodel
 
 A modern Python implementation for population receptive field model fitting.
 
 ## Installation
 
-To install the development version of popylar_prf from GitHub, run:
+To install the development version of prfmodel from GitHub, run:
 
 ```console
 git clone git@github.com:popylar-org/popylar-prf.git
@@ -18,7 +18,7 @@ cd popylar-prf
 python -m pip install .
 ```
 
-The package relies on [Keras](https://keras.io/) for multi-backend model fitting. To install popylar_prf with
+The package relies on [Keras](https://keras.io/) for multi-backend model fitting. To install prfmodel with
 the Tensorflow backend, run:
 
 ```console

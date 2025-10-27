@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=popylar_prf
+set SPHINXPROJ=prfmodel
 
 if "%1" == "" goto help
 
