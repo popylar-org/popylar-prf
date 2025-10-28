@@ -1,10 +1,12 @@
 """Test model base classes."""
 
 import pytest
+from prfmodel.models.base import BaseImpulse
 from prfmodel.models.base import BaseModel
-from prfmodel.models.base import ParameterBatchDimensionError
-from prfmodel.models.base import ParameterShapeError
-from prfmodel.models.base import ResponseModel
+from prfmodel.models.base import BasePRFResponse
+from prfmodel.models.base import BaseTemporal
+from prfmodel.models.base import BatchDimensionError
+from prfmodel.models.base import ShapeError
 
 
 def test_parameter_shape_error():
@@ -12,24 +14,24 @@ def test_parameter_shape_error():
     param_name = "param_1"
     param_shape = 1
 
-    with pytest.raises(ParameterShapeError) as excinfo:
-        raise ParameterShapeError(param_name, param_shape)
+    with pytest.raises(ShapeError) as excinfo:
+        raise ShapeError(param_name, param_shape)
 
     assert param_name in str(excinfo.value)
     assert str(param_shape) in str(excinfo.value)
 
 
-def test_parameter_batch_dimension_error():
-    """Test that ParameterBatchDimensionError shows correct parameter names and shapes in error message."""
-    param_names = ("param_1", "param_2")
-    param_shapes = ((2, 1), (1, 1))
+def test_batch_dimension_error():
+    """Test that BatchDimensionError shows correct arg names and shapes in error message."""
+    arg_names = ("arg_1", "arg_2")
+    arg_shapes = ((2, 1), (1, 1))
 
-    with pytest.raises(ParameterBatchDimensionError) as excinfo:
-        raise ParameterBatchDimensionError(param_names, param_shapes)
+    with pytest.raises(BatchDimensionError) as excinfo:
+        raise BatchDimensionError(arg_names, arg_shapes)
 
-    for param_name, param_shape in zip(param_names, param_shapes, strict=False):
-        assert param_name in str(excinfo.value)
-        assert str(param_shape[0]) in str(excinfo.value)
+    for arg_name, arg_shape in zip(arg_names, arg_shapes, strict=False):
+        assert arg_name in str(excinfo.value)
+        assert str(arg_shape[0]) in str(excinfo.value)
 
 
 class TestBaseModel:
@@ -44,7 +46,19 @@ class TestBaseModel:
 
 
 # Inherit all checks from TestBaseModel
-class TestResponseModel(TestBaseModel):
-    """Tests for ResponseModel class."""
+class TestBasePRFResponse(TestBaseModel):
+    """Tests for BasePRFResponse class."""
 
-    model_class = ResponseModel
+    model_class = BasePRFResponse
+
+
+class TestBaseImpulse(TestBaseModel):
+    """Tests for BaseImpulse class."""
+
+    model_class = BaseImpulse
+
+
+class TestBaseTemporal(TestBaseModel):
+    """Tests for BaseTemporal class."""
+
+    model_class = BaseTemporal
