@@ -9,6 +9,7 @@ from prfmodel.stimulus import DimensionLabelsError
 from prfmodel.stimulus import GridDesignShapeError
 from prfmodel.stimulus import GridDimensionsError
 from prfmodel.stimulus import Stimulus
+from prfmodel.stimulus import _get_grid_extent
 
 
 def test_grid_design_shape_error():
@@ -167,3 +168,14 @@ def test_create_2d_bar_stimulus(direction: str):
             # All values in each column should be equal for all frames
             cols_equal = np.all(stimulus.design == stimulus.design[:, :, [0]])
             assert np.all(cols_equal)
+
+
+def test__get_grid_extent():
+    """Test that grid extents get extracted correctly."""
+    x = np.arange(-4, 4, 1, dtype=np.float32)
+    y = np.arange(-2, 6, 2, dtype=np.float32)
+    xv, yv = np.meshgrid(x, y)
+    grid = np.stack((xv, yv), axis=-1)
+    result = _get_grid_extent(grid)
+    expected = (-4.0, 3.0, -2.0, 4.0)
+    assert result == expected, "Grid extent extracted incorrectly"
