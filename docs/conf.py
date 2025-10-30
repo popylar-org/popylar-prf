@@ -21,6 +21,7 @@ project = "prfmodel"
 copyright = "2025, Netherlands eScience Center, Vrije Universiteit Amsterdam, Netherlands Institute for Neuroscience"
 author = "Malte Lüken, Flavio Hafner, Gilles de Hollander, Tomas Knapen"
 
+
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
@@ -70,12 +71,14 @@ autoapi_options = [
     "imported-members",
 ]
 
+
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
 html_theme = "furo"
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -91,6 +94,6 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
     # 'scikit-learn': ('https://scikit-learn.org/stable/', None),
-    # 'matplotlib': ('https://matplotlib.org/stable/', None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
     "pandas": ("http://pandas.pydata.org/docs/", None),
 }

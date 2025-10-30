@@ -1,7 +1,10 @@
 """Containers for stimuli and stimulus grids."""
 
 from collections.abc import Sequence
+from typing import Any
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import animation
 
 
 class GridDesignShapeError(Exception):
@@ -64,7 +67,7 @@ class Stimulus:
         The stimulus design array containing the stimulus value in one or more dimensions over different time frames.
         The first axis is assumed to be time frames. Additional axes represent design dimensions.
     grid : numpy.ndarray
-        The coordinate system of the stimulus array. The last axis is the number of design dimensions
+        The coordinate system of the design. The last axis is the number of design dimensions
         excluding the time frame dimension. The shape excluding the last axis must match the shape
         of the design excluding the first axis.
     dimension_labels : Sequence[str] or None, optional
@@ -113,7 +116,12 @@ class Stimulus:
     # We don't want the object to be hashable because it's mutable
     __hash__ = None  # type: ignore[assignment]
 
-    def __init__(self, design: np.ndarray, grid: np.ndarray, dimension_labels: Sequence[str] | None = None):
+    def __init__(
+        self,
+        design: np.ndarray[Any, np.dtype[np.float32]],
+        grid: np.ndarray[Any, np.dtype[np.float32]],
+        dimension_labels: Sequence[str] | None = None,
+    ):
         self.design = design
         self.grid = grid
         self.dimension_labels = dimension_labels
@@ -249,3 +257,64 @@ class Stimulus:
             grid=grid,
             dimension_labels=dimension_labels,
         )
+
+
+def make_video(stimulus: Stimulus, title: str | None = None, kwargs: dict | None = None) -> str:
+    """Visualize a stimulus as a video.
+
+    Parameters
+    ----------
+    stimulus: Stimulus
+        The stimulus to visualize.
+    title : str or None, Optional.
+        Title for the video animation.
+    kwargs : dict or None, Optional.
+        Additional keyword arguments passed to :class:`matplotlib.animation.ArtistAnimation`.
+
+    Returns
+    -------
+    An HTML5 string that can be rendered as a video.
+
+    Examples
+    --------
+    >>> from IPython.display import HTML
+    >>> from prfmodel.stimulus import Stimulus, make_video
+    >>> bar_stimulus = Stimulus.create_2d_bar_stimulus(num_frames=100, width=128, height=64)
+    >>> video = make_video(bar_stimulus)
+    >>> HTML(video)
+    """
+    if kwargs is None:  # TODO: do we want defaults?
+        kwargs = {"interval": 50, "blit": True, "repeat_delay": 1000}
+
+    fig, ax = plt.subplots()
+    n_frames = stimulus.design.shape[0]
+    grid_extent = _get_grid_extent(stimulus.grid)
+    ims = []
+    for i in range(n_frames):
+        im = ax.imshow(stimulus.design[i, :, :], animated=True, extent=grid_extent, origin="lower")
+        ims.append([im])
+
+    if stimulus.dimension_labels:
+        ax.set_ylabel(stimulus.dimension_labels[0], fontsize=16)
+        ax.set_xlabel(stimulus.dimension_labels[1], fontsize=16)
+
+    if title:
+        ax.set_title(title, fontsize=20)
+
+    ani = animation.ArtistAnimation(fig, ims, **kwargs)
+    html5_video = ani.to_html5_video()
+    plt.close(fig)
+    return html5_video
+
+
+def _get_grid_extent(grid: np.ndarray[Any, np.dtype[np.float32]]) -> tuple[float, float, float, float]:
+    """From a 2D coordinate grid, return its coordinate limits.
+
+    Output can be passed to :class:`matlplotlib.axes.Axes.imshow`
+    """
+    left = grid[0, 0, 0]
+    bottom = grid[0, 0, -1]
+
+    right = grid[0, -1, 0]
+    top = grid[-1, -1, -1]
+    return (left, right, bottom, top)
