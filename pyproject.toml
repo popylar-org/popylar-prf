@@ -27,6 +27,7 @@ classifiers = [
 ]
 dependencies = [
     "keras",
+    "more-itertools",
     "numpy<2.0.0",
     "pandas",
     "scipy",
