@@ -57,6 +57,23 @@ class DimensionLabelsError(Exception):
         super().__init__(f"Length of 'dimensions' {dimensions_len} does not match last dimension of 'grid' {grid_dim}")
 
 
+class StimulusDimensionError(Exception):
+    """Exception raised when Stimulus does not have the right number of dimensions.
+
+    The dimension for the frames is ignored.
+
+    Parameters
+    ----------
+    actual : int
+        Number of dimensions in the stimulus grid.
+    expected : int
+        Number of expected dimensions in the stimulus grid.
+    """
+
+    def __init__(self, actual: int, expected: int):
+        super().__init__(f"Stimulus frames have {actual} dimensions, but expected {expected}.")
+
+
 class Stimulus:
     """
     Container for a stimulus design and its associated grid.
@@ -116,12 +133,7 @@ class Stimulus:
     # We don't want the object to be hashable because it's mutable
     __hash__ = None  # type: ignore[assignment]
 
-    def __init__(
-        self,
-        design: np.ndarray[Any, np.dtype[np.float32]],
-        grid: np.ndarray[Any, np.dtype[np.float32]],
-        dimension_labels: Sequence[str] | None = None,
-    ):
+    def __init__(self, design: np.ndarray, grid: np.ndarray, dimension_labels: Sequence[str] | None = None):
         self.design = design
         self.grid = grid
         self.dimension_labels = dimension_labels
@@ -259,8 +271,15 @@ class Stimulus:
         )
 
 
-def make_video(stimulus: Stimulus, title: str | None = None, kwargs: dict | None = None) -> str:
-    """Visualize a stimulus as a video.
+def animate_2d_stimulus(
+    stimulus: Stimulus,
+    title: str | None = None,
+    interval: int = 50,
+    blit: bool = True,
+    repeat_delay: int = 1000,
+    **kwargs: Any,  # noqa: ANN401
+) -> animation.ArtistAnimation:
+    """Animate a 2d stimulus.
 
     Parameters
     ----------
@@ -268,23 +287,38 @@ def make_video(stimulus: Stimulus, title: str | None = None, kwargs: dict | None
         The stimulus to visualize.
     title : str or None, Optional.
         Title for the video animation.
-    kwargs : dict or None, Optional.
+    interval : int
+        Interval arg passed to animation
+    blit : bool
+        Passed to animation
+    repeat_delay: int
+        pass to animation
+    kwargs : Any
         Additional keyword arguments passed to :class:`matplotlib.animation.ArtistAnimation`.
 
     Returns
     -------
-    An HTML5 string that can be rendered as a video.
+    A :class:`matplotlib.animation.ArtistAnimation` that can be rendered as video.
+
+    Raises
+    ------
+    A StimulusDimensionError when `stimulus` is not 2-dimensional.
 
     Examples
     --------
     >>> from IPython.display import HTML
     >>> from prfmodel.stimulus import Stimulus, make_video
     >>> bar_stimulus = Stimulus.create_2d_bar_stimulus(num_frames=100, width=128, height=64)
-    >>> video = make_video(bar_stimulus)
+    >>> ani = make_2d_animation(bar_stimulus)
+    >>> video = ani.to_html5_video()
     >>> HTML(video)
     """
-    if kwargs is None:  # TODO: do we want defaults?
-        kwargs = {"interval": 50, "blit": True, "repeat_delay": 1000}
+    _verify_dimensions(stimulus, 2)
+
+    font_sizes = {
+        "title": 20,
+        "labels": 16,
+    }
 
     fig, ax = plt.subplots()
     n_frames = stimulus.design.shape[0]
@@ -295,19 +329,29 @@ def make_video(stimulus: Stimulus, title: str | None = None, kwargs: dict | None
         ims.append([im])
 
     if stimulus.dimension_labels:
-        ax.set_ylabel(stimulus.dimension_labels[0], fontsize=16)
-        ax.set_xlabel(stimulus.dimension_labels[1], fontsize=16)
+        ax.set_ylabel(stimulus.dimension_labels[0], fontsize=font_sizes["labels"])
+        ax.set_xlabel(stimulus.dimension_labels[1], fontsize=font_sizes["labels"])
 
     if title:
-        ax.set_title(title, fontsize=20)
+        ax.set_title(title, fontsize=font_sizes["title"])
 
+    kwargs = kwargs | {"interval": interval, "blit": blit, "repeat_delay": repeat_delay}
     ani = animation.ArtistAnimation(fig, ims, **kwargs)
-    html5_video = ani.to_html5_video()
     plt.close(fig)
-    return html5_video
+    return ani
 
 
-def _get_grid_extent(grid: np.ndarray[Any, np.dtype[np.float32]]) -> tuple[float, float, float, float]:
+def _verify_dimensions(stimulus: Stimulus, expected: int) -> None:
+    """Verify that stimulus has the right dimensions.
+
+    This checks for the number of dimensions excluding the first (frame) dimension.
+    """
+    actual = len(stimulus.design.shape)
+    if actual != expected + 1:
+        raise StimulusDimensionError(actual, expected)
+
+
+def _get_grid_extent(grid: np.ndarray) -> tuple[float, float, float, float]:
     """From a 2D coordinate grid, return its coordinate limits.
 
     Output can be passed to :class:`matlplotlib.axes.Axes.imshow`
