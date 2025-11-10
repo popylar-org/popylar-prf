@@ -19,6 +19,7 @@ class JAXSGDFitter(BaseSGDFitter):
         non_trainable_variables: list,
         x: Stimulus,
         y: Tensor,
+        dtype: str | None,
     ) -> tuple[Tensor, tuple[Tensor, list]]:
         state_mapping: list[tuple[str, Tensor]] = []
         state_mapping.extend(zip(self.trainable_variables, trainable_variables, strict=False))
@@ -35,7 +36,7 @@ class JAXSGDFitter(BaseSGDFitter):
                     )
                 },
             )
-            y_pred = self.model(x, params)
+            y_pred = self.model(x, params, dtype=dtype)
             loss = self.compute_loss(y=y, y_pred=y_pred)
 
         non_trainable_variables = [scope.get_current_value(v) for v in self.non_trainable_variables]
@@ -59,14 +60,15 @@ class JAXSGDFitter(BaseSGDFitter):
 
         grad_fn = jax.value_and_grad(self._compute_loss_and_updates, has_aux=True)
 
-        trainable_variables = [jnp.array(v) for v in trainable_variables]
-        non_trainable_variables = [jnp.array(v) for v in non_trainable_variables]
+        trainable_variables = [jnp.array(v, dtype=self.dtype) for v in trainable_variables]
+        non_trainable_variables = [jnp.array(v, dtype=self.dtype) for v in non_trainable_variables]
 
         (loss, (y_pred, non_trainable_variables)), grads = grad_fn(
             trainable_variables,
             non_trainable_variables,
             x,
             y,
+            self.dtype,
         )
 
         (

@@ -6,6 +6,8 @@ import pytest
 from prfmodel.models.gaussian import Gaussian2DPRFModel
 from prfmodel.stimulus import Stimulus
 
+parametrize_dtype = pytest.mark.parametrize("dtype", [None, "float32"])
+
 
 class TestSetup:
     """Setup parameters and objects for fitter tests."""

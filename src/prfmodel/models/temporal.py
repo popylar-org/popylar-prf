@@ -4,6 +4,7 @@ import pandas as pd
 from keras import ops
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
+from prfmodel.utils import get_dtype
 from .base import _MIN_PARAMETER_DIM
 from .base import BaseTemporal
 from .base import ShapeError
@@ -42,7 +43,7 @@ class BaselineAmplitude(BaseTemporal):
         """
         return ["baseline", "amplitude"]
 
-    def __call__(self, inputs: Tensor, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, inputs: Tensor, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Predict the model response.
 
@@ -53,14 +54,18 @@ class BaselineAmplitude(BaseTemporal):
         parameters : pandas.DataFrame
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different voxels. Must contain the columns `baseline` and `amplitude`.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses `keras.config.floatx()` which defaults
+            to `float32`.
 
         Returns
         -------
         Tensor
-            Model predictions with the same shape as `inputs`.
+            Model predictions with the same shape as `inputs` and dtype `dtype`.
 
         """
-        inputs = ops.convert_to_tensor(inputs)
+        dtype = get_dtype(dtype)
+        inputs = ops.convert_to_tensor(inputs, dtype=dtype)
 
         if len(inputs.shape) != _MIN_PARAMETER_DIM:
             raise ShapeError(
@@ -68,7 +73,7 @@ class BaselineAmplitude(BaseTemporal):
                 arg_shape=inputs.shape,
             )
 
-        baseline = convert_parameters_to_tensor(parameters[["baseline"]])
-        amplitude = convert_parameters_to_tensor(parameters[["amplitude"]])
+        baseline = convert_parameters_to_tensor(parameters[["baseline"]], dtype=dtype)
+        amplitude = convert_parameters_to_tensor(parameters[["amplitude"]], dtype=dtype)
 
         return inputs * amplitude + baseline

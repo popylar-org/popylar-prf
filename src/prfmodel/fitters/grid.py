@@ -48,6 +48,9 @@ class GridFitter:
         model predicitons. Default is `None` where a `keras.optimizers.MeanSquaredError` loss is used. Note that, when
         a `keras.losses.Loss` instance is used, the argument `reduction` must be set to `'none'` to enable loss
         computation for all data batches.
+    dtype : str, optional
+        The dtype used for fitting. If `None` (the default), uses `keras.config.floatx()` which defaults
+        to `float32`.
 
     Notes
     -----
@@ -56,7 +59,13 @@ class GridFitter:
 
     """
 
-    def __init__(self, model: BaseModel, stimulus: Stimulus, loss: keras.losses.Loss | Callable | None = None):
+    def __init__(
+        self,
+        model: BaseModel,
+        stimulus: Stimulus,
+        loss: keras.losses.Loss | Callable | None = None,
+        dtype: str | None = None,
+    ):
         self.model = model
         self.stimulus = stimulus
 
@@ -64,6 +73,7 @@ class GridFitter:
             loss = keras.losses.MeanSquaredError(reduction="none")
 
         self.loss = loss
+        self.dtype = dtype
 
     def fit(
         self,
@@ -94,7 +104,7 @@ class GridFitter:
 
         """
         # Convert data to tensor
-        data = ops.convert_to_tensor(data)
+        data = ops.convert_to_tensor(data, dtype=self.dtype)
         # Keep parameter combinations as numpy arrays
         arrays = [ops.convert_to_numpy(val) for val in parameter_values.values()]
         # Calc total number of combinations
@@ -106,9 +116,9 @@ class GridFitter:
         # Create generator for chunked parameter combinations
         param_iter_batched = chunked(product(*arrays), n=chunk_size)
         # Initialize array of best parameter set for each source
-        best_params = np.empty((len(parameter_values.keys()), data.shape[0]))
+        best_params = ops.convert_to_numpy(ops.zeros((len(parameter_values.keys()), data.shape[0]), dtype=self.dtype))
         # Initialize array of best loss for each source
-        best_loss = np.full((data.shape[0],), fill_value=np.inf)
+        best_loss = ops.convert_to_numpy(ops.full((data.shape[0],), fill_value=np.inf, dtype=self.dtype))
         # Add parameter combination dimension to data for broadcasting
         data = ops.expand_dims(data, 0)
 
@@ -125,7 +135,7 @@ class GridFitter:
                 # Create a dict that allows column selection like data frames
                 param_dict = ParamsDict(dict(zip(parameter_values.keys(), params, strict=False)))
                 # Create model predictions for each parameter combination and add dimension for data sources
-                pred = ops.expand_dims(self.model(self.stimulus, param_dict), 1)  # type: ignore[operator]
+                pred = ops.expand_dims(self.model(self.stimulus, param_dict, dtype=self.dtype), 1)  # type: ignore[operator]
                 # Calculate loss for each parameter combination and data source
                 losses = self.loss(data, pred)
                 # For each data source if min loss across all parameter combinations is lower, update
@@ -137,6 +147,6 @@ class GridFitter:
                 # Add mean loss across data batches to progress bar
                 pbar.set_postfix({"loss": float(best_loss.mean())})
 
-        best_params = pd.DataFrame(best_params.T, columns=parameter_values.keys())
+        best_params_out = pd.DataFrame(dict(zip(parameter_values.keys(), best_params, strict=False)))
 
-        return GridHistory({"loss": best_loss}), best_params
+        return GridHistory({"loss": best_loss}), best_params_out

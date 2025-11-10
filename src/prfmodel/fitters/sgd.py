@@ -78,6 +78,9 @@ class SGDFitter(BackendSGDFitter):
     loss : keras.optimizers.Loss or Callable, optional
         Loss instance or function with the signatur `f(y, y_pred)`, where `y` are the target data and `y_pred` are the
         model predicitons. Default is `None` where a `keras.optimizers.MeanSquaredError` loss is used.
+    dtype : str, optional
+        The dtype used for fitting. If `None` (the default), uses `keras.config.floatx()` which defaults
+        to `float32`.
 
     Notes
     -----
@@ -93,6 +96,7 @@ class SGDFitter(BackendSGDFitter):
         stimulus: Stimulus,
         optimizer: keras.optimizers.Optimizer | None = None,
         loss: keras.losses.Loss | Callable | None = None,
+        dtype: str | None = None,
     ):
         super().__init__()
 
@@ -107,6 +111,7 @@ class SGDFitter(BackendSGDFitter):
 
         self.optimizer = optimizer
         self.loss = loss
+        self.dtype = dtype
 
     def _create_variables(self, init_parameters: pd.DataFrame, fixed_parameters: Sequence[str]) -> None:
         for key, val in init_parameters.items():
@@ -115,7 +120,7 @@ class SGDFitter(BackendSGDFitter):
                 # Convert from hashable to str
                 self,
                 str(key),
-                keras.Variable(val, dtype="float64", name=key, trainable=key not in fixed_parameters),
+                keras.Variable(val, dtype=self.dtype, name=key, trainable=key not in fixed_parameters),
             )
 
     def _delete_variables(self, init_parameters: pd.DataFrame) -> None:
@@ -164,7 +169,7 @@ class SGDFitter(BackendSGDFitter):
 
         self.compile(optimizer=self.optimizer, loss=self.loss)
 
-        data = ops.convert_to_tensor(data)
+        data = ops.convert_to_tensor(data, dtype=self.dtype)
 
         state = self._get_state()
 

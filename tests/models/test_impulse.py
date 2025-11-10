@@ -9,6 +9,7 @@ from scipy import special
 from prfmodel.models.impulse import TwoGammaImpulse
 from prfmodel.models.impulse import convolve_prf_impulse_response
 from prfmodel.models.impulse import gamma_density
+from .conftest import parametrize_dtype
 
 
 def test_convolve_prf_impulse_response():
@@ -172,8 +173,9 @@ class TestTwoGammaResponseModel(TestIRFSetup):
         """Test that property frames has correct shape."""
         assert irf_model.frames.shape == (1, irf_model.num_frames)
 
-    def test_call(self, irf_model: TwoGammaImpulse, parameters: pd.DataFrame):
+    @parametrize_dtype
+    def test_call(self, irf_model: TwoGammaImpulse, parameters: pd.DataFrame, dtype: str):
         """Test that model response has correct shape."""
-        resp = irf_model(parameters)
+        resp = irf_model(parameters, dtype)
 
         assert resp.shape == (parameters.shape[0], irf_model.frames.shape[1])
