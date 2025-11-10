@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from matplotlib import animation
 
 # Needs to be imported to recreate stimulus from repr
 from numpy import array  # noqa: F401
@@ -9,7 +10,10 @@ from prfmodel.stimulus import DimensionLabelsError
 from prfmodel.stimulus import GridDesignShapeError
 from prfmodel.stimulus import GridDimensionsError
 from prfmodel.stimulus import Stimulus
+from prfmodel.stimulus import StimulusDimensionError
 from prfmodel.stimulus import _get_grid_extent
+from prfmodel.stimulus import _verify_dimensions
+from prfmodel.stimulus import animate_2d_stimulus
 
 
 def test_grid_design_shape_error():
@@ -47,6 +51,16 @@ def stimulus():
         design=np.zeros((1, 2, 1)),
         grid=np.zeros((2, 1, 2)),
         dimension_labels=["x", "y"],
+    )
+
+
+@pytest.fixture
+def stimulus_1d():
+    """Stimulus object."""
+    return Stimulus(
+        design=np.zeros((1, 2)),
+        grid=np.zeros((2, 1)),
+        dimension_labels=["x"],
     )
 
 
@@ -179,3 +193,18 @@ def test__get_grid_extent():
     result = _get_grid_extent(grid)
     expected = (-4.0, 3.0, -2.0, 4.0)
     assert result == expected, "Grid extent extracted incorrectly"
+
+
+def test__verify_dimensions(stimulus_1d: Stimulus):
+    """Test that error is raised."""
+    with pytest.raises(StimulusDimensionError):
+        _verify_dimensions(stimulus_1d, 2)
+
+
+def test_animate_stimulus():
+    """Test that animation uses the correct input data."""
+    bar_stimulus = Stimulus.create_2d_bar_stimulus(num_frames=100, width=128, height=64)
+    ani = animate_2d_stimulus(bar_stimulus)
+    assert isinstance(ani, animation.ArtistAnimation), "Wrong type returned"
+    reconstructed = np.stack([frame[0]._A.data for frame in ani._framedata])  # noqa: SLF001
+    np.testing.assert_allclose(reconstructed, bar_stimulus.design)
