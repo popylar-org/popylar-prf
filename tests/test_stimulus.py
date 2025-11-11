@@ -1,5 +1,6 @@
 """Test stimulus classes."""
 
+import matplotlib as mpl
 import numpy as np
 import pytest
 from matplotlib import animation
@@ -14,6 +15,7 @@ from prfmodel.stimulus import StimulusDimensionError
 from prfmodel.stimulus import _get_grid_limits
 from prfmodel.stimulus import _verify_dimensions
 from prfmodel.stimulus import animate_2d_stimulus
+from prfmodel.stimulus import plot_2d_stimulus
 
 
 def test_grid_design_shape_error():
@@ -201,10 +203,30 @@ def test__verify_dimensions(stimulus_1d: Stimulus):
         _verify_dimensions(stimulus_1d, 2)
 
 
-def test_animate_stimulus():
+@pytest.fixture
+def bar_stimulus():
+    """Create bar stimulus to plot."""
+    return Stimulus.create_2d_bar_stimulus(num_frames=100, width=128, height=64)
+
+
+def test_animate_2d_stimulus(bar_stimulus: Stimulus):
     """Test that animation uses the correct input data."""
-    bar_stimulus = Stimulus.create_2d_bar_stimulus(num_frames=100, width=128, height=64)
     ani = animate_2d_stimulus(bar_stimulus)
     assert isinstance(ani, animation.ArtistAnimation), "Wrong type returned"
-    reconstructed = np.stack([frame[0]._A.data for frame in ani._framedata])  # noqa: SLF001
-    np.testing.assert_allclose(reconstructed, bar_stimulus.design)
+    reconstructed = np.stack([frame[0].get_array().data for frame in ani._framedata])  # noqa: SLF001
+    np.testing.assert_allclose(reconstructed, bar_stimulus.design, err_msg="Animation uses wrong data")
+
+
+@pytest.mark.parametrize(
+    ("input_frame_idx", "expected_frame_idx"),
+    [(None, 100 // 2), (10, 10)],
+)
+def test_plot_2d_stimulus(bar_stimulus: Stimulus, input_frame_idx: int | None, expected_frame_idx: int):
+    """Test that plotting uses the correct input data."""
+    fig = plot_2d_stimulus(bar_stimulus, input_frame_idx)
+    assert isinstance(fig, mpl.figure.Figure), "Does not create the correct type"
+    ax = fig.axes[0]
+    img = ax.images[0]
+
+    plotted_data = img.get_array().data
+    np.testing.assert_allclose(plotted_data, bar_stimulus.design[expected_frame_idx], err_msg="Figure uses wrong data")
