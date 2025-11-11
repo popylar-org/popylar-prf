@@ -11,7 +11,7 @@ from prfmodel.stimulus import GridDesignShapeError
 from prfmodel.stimulus import GridDimensionsError
 from prfmodel.stimulus import Stimulus
 from prfmodel.stimulus import StimulusDimensionError
-from prfmodel.stimulus import _get_grid_extent
+from prfmodel.stimulus import _get_grid_limits
 from prfmodel.stimulus import _verify_dimensions
 from prfmodel.stimulus import animate_2d_stimulus
 
@@ -184,13 +184,13 @@ def test_create_2d_bar_stimulus(direction: str):
             assert np.all(cols_equal)
 
 
-def test__get_grid_extent():
-    """Test that grid extents get extracted correctly."""
-    x = np.arange(-4, 4, 1, dtype=np.float32)
-    y = np.arange(-2, 6, 2, dtype=np.float32)
+def test__get_grid_limits():
+    """Test that grid limits get extracted correctly."""
+    x = np.arange(-4, 4, 1)
+    y = np.arange(-2, 6, 2)
     xv, yv = np.meshgrid(x, y)
     grid = np.stack((xv, yv), axis=-1)
-    result = _get_grid_extent(grid)
+    result = _get_grid_limits(grid)
     expected = (-4.0, 3.0, -2.0, 4.0)
     assert result == expected, "Grid extent extracted incorrectly"
 
