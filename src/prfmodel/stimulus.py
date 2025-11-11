@@ -291,7 +291,7 @@ def animate_2d_stimulus(
     blit : bool
         `blit` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
     repeat_delay: int
-        `repeat_delay` passed to :class:`matplotlib.animation.ArtistAnimation`.
+        `repeat_delay` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
     kwargs : Any
         Additional keyword arguments passed to :class:`matplotlib.animation.ArtistAnimation`.
 
