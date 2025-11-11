@@ -288,11 +288,11 @@ def animate_2d_stimulus(
     title : str or None, Optional.
         Title for the video animation.
     interval : int
-        Interval arg passed to animation
+        `interval` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
     blit : bool
-        Passed to animation
+        `blit` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
     repeat_delay: int
-        pass to animation
+        `repeat_delay` passed to :class:`matplotlib.animation.ArtistAnimation`.
     kwargs : Any
         Additional keyword arguments passed to :class:`matplotlib.animation.ArtistAnimation`.
 
