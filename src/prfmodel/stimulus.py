@@ -1,6 +1,7 @@
 """Containers for stimuli and stimulus grids."""
 
 from collections.abc import Sequence
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
@@ -270,6 +271,31 @@ class Stimulus:
         )
 
 
+def _setup_2d_plot(
+    stimulus: Stimulus,
+    title: str | None = None,
+) -> tuple[mpl.figure.Figure, mpl.axes.Axes, tuple[float, float, float, float]]:
+    """Set up a 2D plot for a stimulus."""
+    _verify_dimensions(stimulus, 2)
+
+    font_sizes = {
+        "title": 20,
+        "labels": 16,
+    }
+
+    grid_limits = _get_grid_limits(stimulus.grid)
+    fig, ax = plt.subplots()
+
+    if stimulus.dimension_labels:
+        ax.set_ylabel(stimulus.dimension_labels[0], fontsize=font_sizes["labels"])
+        ax.set_xlabel(stimulus.dimension_labels[1], fontsize=font_sizes["labels"])
+
+    if title:
+        ax.set_title(title, fontsize=font_sizes["title"])
+
+    return fig, ax, grid_limits
+
+
 def animate_2d_stimulus(
     stimulus: Stimulus,
     title: str | None = None,
@@ -297,7 +323,7 @@ def animate_2d_stimulus(
 
     Returns
     -------
-    A :class:`matplotlib.animation.ArtistAnimation` that can be rendered as video.
+    matplotlib.animation.ArtistAnimation
 
     Raises
     ------
@@ -312,32 +338,53 @@ def animate_2d_stimulus(
     >>> video = ani.to_html5_video()
     >>> HTML(video)
     """
-    _verify_dimensions(stimulus, 2)
+    fig, ax, grid_limits = _setup_2d_plot(stimulus, title)
 
-    font_sizes = {
-        "title": 20,
-        "labels": 16,
-    }
-
-    fig, ax = plt.subplots()
     n_frames = stimulus.design.shape[0]
-    grid_limits = _get_grid_limits(stimulus.grid)
     ims = []
     for i in range(n_frames):
         im = ax.imshow(stimulus.design[i, :, :], animated=True, extent=grid_limits, origin="lower")
         ims.append([im])
 
-    if stimulus.dimension_labels:
-        ax.set_ylabel(stimulus.dimension_labels[0], fontsize=font_sizes["labels"])
-        ax.set_xlabel(stimulus.dimension_labels[1], fontsize=font_sizes["labels"])
-
-    if title:
-        ax.set_title(title, fontsize=font_sizes["title"])
-
     kwargs = kwargs | {"interval": interval, "blit": blit, "repeat_delay": repeat_delay}
     ani = animation.ArtistAnimation(fig, ims, **kwargs)
     plt.close(fig)
     return ani
+
+
+def plot_2d_stimulus(
+    stimulus: Stimulus,
+    frame_idx: int | None = None,
+    title: str | None = None,
+) -> mpl.figure.Figure:
+    """Plot a single frame of a 2d stimulus.
+
+    Parameters
+    ----------
+    stimulus : Stimulus
+        The stimulus to visualize.
+    frame_idx : int or `None`
+        Index of the frame to plot. If None, plots the middle frame.
+    title : str or None, optional
+        Title for the plot.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+
+    Raises
+    ------
+    StimulusDimensionError
+        If the stimulus is not 2-dimensional.
+    """
+    fig, ax, grid_limits = _setup_2d_plot(stimulus, title)
+
+    n_frames = stimulus.design.shape[0]
+    frame_idx = frame_idx if frame_idx is not None else n_frames // 2
+    ax.imshow(stimulus.design[frame_idx, :, :], extent=grid_limits, origin="lower")
+
+    plt.close(fig)
+    return fig
 
 
 def _verify_dimensions(stimulus: Stimulus, expected: int) -> None:
