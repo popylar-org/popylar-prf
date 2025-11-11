@@ -17,6 +17,7 @@ from prfmodel.models.impulse import TwoGammaImpulse
 from prfmodel.models.temporal import BaselineAmplitude
 from prfmodel.stimulus import GridDimensionsError
 from prfmodel.stimulus import Stimulus
+from .conftest import parametrize_dtype
 
 
 class TestCheckGaussianArgs:
@@ -199,7 +200,8 @@ class TestGaussian2DResponse(TestSetup):
         # Order of parameter names does not matter
         assert set(response_model.parameter_names) & {"mu_y", "mu_x", "sigma"}
 
-    def test_predict(self, response_model: Gaussian2DResponse, stimulus: Stimulus):
+    @parametrize_dtype
+    def test_predict(self, response_model: Gaussian2DResponse, stimulus: Stimulus, dtype: str):
         """Test that response prediction returns correct shape."""
         # 3 voxels
         params = pd.DataFrame(
@@ -210,7 +212,7 @@ class TestGaussian2DResponse(TestSetup):
             },
         )
 
-        preds = np.asarray(response_model(stimulus, params))
+        preds = np.asarray(response_model(stimulus, params, dtype))
 
         # Check result shape
         assert preds.shape == (params.shape[0], self.height, self.width)  # (num_voxels, height, width)

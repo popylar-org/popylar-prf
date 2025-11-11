@@ -16,7 +16,7 @@ class GridDesignShapeError(Exception):
         Shape of the grid array.
     """
 
-    def __init__(self, design_shape: tuple[int], grid_shape: tuple[int, ...]):
+    def __init__(self, design_shape: tuple[int, ...], grid_shape: tuple[int, ...]):
         super().__init__(f"Shapes of 'design' {design_shape} and 'grid' {grid_shape} do not match")
 
 
