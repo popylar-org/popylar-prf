@@ -1,5 +1,6 @@
 """Gaussian population receptive field response models."""
 
+import math
 import pandas as pd
 from keras import ops
 from prfmodel.stimulus import GridDimensionsError
@@ -149,11 +150,16 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
     # Expand axes to enable keras.ops autocasting
     grid, mu, sigma = _expand_gaussian_args(grid, mu, sigma)
 
+    sigma_squared = ops.square(sigma)
+
     # Gaussian response
     resp = ops.sum(ops.square(grid - mu), axis=-1)
-    resp /= 2 * ops.square(sigma)
+    resp /= 2 * sigma_squared
 
-    return ops.exp(-resp)
+    # Divide by volume to normalize
+    volume = ops.sqrt(2 * math.pi * sigma_squared)
+
+    return ops.exp(-resp) / volume
 
 
 class Gaussian2DResponse(BasePRFResponse):
