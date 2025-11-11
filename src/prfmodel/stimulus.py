@@ -1,7 +1,6 @@
 """Containers for stimuli and stimulus grids."""
 
 from collections.abc import Sequence
-from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
@@ -277,7 +276,7 @@ def animate_2d_stimulus(
     interval: int = 50,
     blit: bool = True,
     repeat_delay: int = 1000,
-    **kwargs: Any,  # noqa: ANN401
+    **kwargs,
 ) -> animation.ArtistAnimation:
     """Animate a 2d stimulus.
 
@@ -322,10 +321,10 @@ def animate_2d_stimulus(
 
     fig, ax = plt.subplots()
     n_frames = stimulus.design.shape[0]
-    grid_extent = _get_grid_extent(stimulus.grid)
+    grid_limits = _get_grid_limits(stimulus.grid)
     ims = []
     for i in range(n_frames):
-        im = ax.imshow(stimulus.design[i, :, :], animated=True, extent=grid_extent, origin="lower")
+        im = ax.imshow(stimulus.design[i, :, :], animated=True, extent=grid_limits, origin="lower")
         ims.append([im])
 
     if stimulus.dimension_labels:
@@ -351,10 +350,10 @@ def _verify_dimensions(stimulus: Stimulus, expected: int) -> None:
         raise StimulusDimensionError(actual, expected)
 
 
-def _get_grid_extent(grid: np.ndarray) -> tuple[float, float, float, float]:
+def _get_grid_limits(grid: np.ndarray) -> tuple[float, float, float, float]:
     """From a 2D coordinate grid, return its coordinate limits.
 
-    Output can be passed to :class:`matlplotlib.axes.Axes.imshow`
+    Output can be passed as `extent` argument to :class:`matlplotlib.axes.Axes.imshow`
     """
     left = grid[0, 0, 0]
     bottom = grid[0, 0, -1]
