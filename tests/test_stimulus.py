@@ -217,16 +217,13 @@ def test_animate_2d_stimulus(bar_stimulus: Stimulus):
     np.testing.assert_allclose(reconstructed, bar_stimulus.design, err_msg="Animation uses wrong data")
 
 
-@pytest.mark.parametrize(
-    ("input_frame_idx", "expected_frame_idx"),
-    [(None, 100 // 2), (10, 10)],
-)
-def test_plot_2d_stimulus(bar_stimulus: Stimulus, input_frame_idx: int | None, expected_frame_idx: int):
+def test_plot_2d_stimulus(bar_stimulus: Stimulus):
     """Test that plotting uses the correct input data."""
-    fig = plot_2d_stimulus(bar_stimulus, input_frame_idx)
-    assert isinstance(fig, mpl.figure.Figure), "Does not create the correct type"
-    ax = fig.axes[0]
+    frame_idx = 10
+    fig, ax = plot_2d_stimulus(bar_stimulus, frame_idx)
+    assert isinstance(fig, mpl.figure.Figure), "Does not create the Figure type"
+    assert isinstance(ax, mpl.axes.Axes), "Does not create the Axes type"
     img = ax.images[0]
 
     plotted_data = img.get_array().data
-    np.testing.assert_allclose(plotted_data, bar_stimulus.design[expected_frame_idx], err_msg="Figure uses wrong data")
+    np.testing.assert_allclose(plotted_data, bar_stimulus.design[frame_idx], err_msg="Figure uses wrong data")
