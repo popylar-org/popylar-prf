@@ -274,31 +274,38 @@ class Stimulus:
 def _setup_2d_plot(
     stimulus: Stimulus,
     title: str | None = None,
+    labelsize: int | None = None,
+    titlesize: int | None = None,
+    **kwargs,
 ) -> tuple[mpl.figure.Figure, mpl.axes.Axes, tuple[float, float, float, float]]:
     """Set up a 2D plot for a stimulus."""
     _verify_dimensions(stimulus, 2)
 
-    font_sizes = {
-        "title": 20,
-        "labels": 16,
-    }
-
     grid_limits = _get_grid_limits(stimulus.grid)
-    fig, ax = plt.subplots()
 
-    if stimulus.dimension_labels:
-        ax.set_ylabel(stimulus.dimension_labels[0], fontsize=font_sizes["labels"])
-        ax.set_xlabel(stimulus.dimension_labels[1], fontsize=font_sizes["labels"])
+    rc_context = {}
+    if labelsize is not None:
+        rc_context["axes.labelsize"] = labelsize
+    if titlesize is not None:
+        rc_context["axes.titlesize"] = titlesize
 
-    if title:
-        ax.set_title(title, fontsize=font_sizes["title"])
+    with mpl.rc_context(rc_context):
+        fig, ax = plt.subplots(**kwargs)
+
+        if stimulus.dimension_labels:
+            ax.set_ylabel(stimulus.dimension_labels[0])
+            ax.set_xlabel(stimulus.dimension_labels[1])
+
+        if title:
+            ax.set_title(title)
 
     return fig, ax, grid_limits
 
 
-def animate_2d_stimulus(
+def animate_2d_stimulus(  # noqa: PLR0913
     stimulus: Stimulus,
     title: str | None = None,
+    origin: str = "lower",
     interval: int = 50,
     blit: bool = True,
     repeat_delay: int = 1000,
@@ -308,18 +315,21 @@ def animate_2d_stimulus(
 
     Parameters
     ----------
-    stimulus: Stimulus
+    stimulus : Stimulus
         The stimulus to visualize.
-    title : str or None, Optional.
+    title : str or None, optional
         Title for the video animation.
-    interval : int
+    origin : str, optional
+        `origin` argument for :meth:`matplotlib.axes.Axes.imshow`.
+    interval : int, optional
         `interval` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
-    blit : bool
+    blit : bool, optional
         `blit` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
-    repeat_delay: int
+    repeat_delay : int, optional
         `repeat_delay` argument passed to :class:`matplotlib.animation.ArtistAnimation`.
-    kwargs : Any
-        Additional keyword arguments passed to :class:`matplotlib.animation.ArtistAnimation`.
+    kwargs
+        Extra arguments passed to :func:`matplotlib.pyplot.subplots`
+        and :class:`matplotlib.animation.ArtistAnimation`.
 
     Returns
     -------
@@ -327,7 +337,8 @@ def animate_2d_stimulus(
 
     Raises
     ------
-    A StimulusDimensionError when `stimulus` is not 2-dimensional.
+    StimulusDimensionError
+        If `stimulus` is not 2-dimensional.
 
     Examples
     --------
@@ -338,12 +349,12 @@ def animate_2d_stimulus(
     >>> video = ani.to_html5_video()
     >>> HTML(video)
     """
-    fig, ax, grid_limits = _setup_2d_plot(stimulus, title)
+    fig, ax, grid_limits = _setup_2d_plot(stimulus, title, labelsize=16, titlesize=20, **kwargs)
 
     n_frames = stimulus.design.shape[0]
     ims = []
     for i in range(n_frames):
-        im = ax.imshow(stimulus.design[i, :, :], animated=True, extent=grid_limits, origin="lower")
+        im = ax.imshow(stimulus.design[i, :, :], animated=True, extent=grid_limits, origin=origin)
         ims.append([im])
 
     kwargs = kwargs | {"interval": interval, "blit": blit, "repeat_delay": repeat_delay}
@@ -354,37 +365,41 @@ def animate_2d_stimulus(
 
 def plot_2d_stimulus(
     stimulus: Stimulus,
-    frame_idx: int | None = None,
+    frame_idx: int,
+    origin: str = "lower",
     title: str | None = None,
-) -> mpl.figure.Figure:
+    **kwargs,
+) -> tuple[mpl.figure.Figure, mpl.axes.Axes]:
     """Plot a single frame of a 2d stimulus.
 
     Parameters
     ----------
     stimulus : Stimulus
         The stimulus to visualize.
-    frame_idx : int or `None`
-        Index of the frame to plot. If None, plots the middle frame.
+    frame_idx : int
+        Index of the frame to plot.
+    origin : str, optional
+        `origin` argument for :meth:`matplotlib.axes.Axes.imshow`.
     title : str or None, optional
         Title for the plot.
+    kwargs
+        Extra arguments passed to :func:`matplotlib.pyplot.subplots`.
 
     Returns
     -------
-    matplotlib.figure.Figure
+    tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]
 
     Raises
     ------
     StimulusDimensionError
         If the stimulus is not 2-dimensional.
     """
-    fig, ax, grid_limits = _setup_2d_plot(stimulus, title)
+    fig, ax, grid_limits = _setup_2d_plot(stimulus, title, **kwargs)
 
-    n_frames = stimulus.design.shape[0]
-    frame_idx = frame_idx if frame_idx is not None else n_frames // 2
-    ax.imshow(stimulus.design[frame_idx, :, :], extent=grid_limits, origin="lower")
+    ax.imshow(stimulus.design[frame_idx, :, :], extent=grid_limits, origin=origin)
 
     plt.close(fig)
-    return fig
+    return fig, ax
 
 
 def _verify_dimensions(stimulus: Stimulus, expected: int) -> None:
