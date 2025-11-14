@@ -1,6 +1,7 @@
 """Containers for stimuli and stimulus grids."""
 
 from collections.abc import Sequence
+from typing import Literal
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -296,7 +297,7 @@ def _setup_2d_plot(
 def animate_2d_stimulus(  # noqa: PLR0913
     stimulus: Stimulus,
     title: str | None = None,
-    origin: str = "lower",
+    origin: Literal["upper", "lower"] = "lower",
     interval: int = 50,
     blit: bool = True,
     repeat_delay: int = 1000,
@@ -331,6 +332,12 @@ def animate_2d_stimulus(  # noqa: PLR0913
     StimulusDimensionError
         If `stimulus` is not 2-dimensional.
 
+    Notes
+    -----
+    The function uses matplotlib under the hood, and you can use the :data:`matplotlib.rcParams`
+    to customize the animation, as described on the
+    `matplotlib docs <https://matplotlib.org/stable/users/explain/customizing.html>`_.
+
     Examples
     --------
     >>> from IPython.display import HTML
@@ -357,7 +364,7 @@ def animate_2d_stimulus(  # noqa: PLR0913
 def plot_2d_stimulus(
     stimulus: Stimulus,
     frame_idx: int,
-    origin: str = "lower",
+    origin: Literal["upper", "lower"] = "lower",
     title: str | None = None,
     **kwargs,
 ) -> tuple[mpl.figure.Figure, mpl.axes.Axes]:
