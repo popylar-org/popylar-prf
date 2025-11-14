@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = ["keras", "numpy", "pandas", "scipy"]
+dependencies = ["keras", "numpy", "pandas", "scipy", "matplotlib"]
 description = "A modern Python implementation for population receptive field modelling."
 keywords = [""]
 license = {file = "LICENSE"}
@@ -51,6 +51,7 @@ dev = [
     "mypy",
     "types-tensorflow",
     "pandas-stubs",
+    "jupyter",
 ]
 publishing = [
     "build",
@@ -96,6 +97,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 select = ["ALL"]
 ignore = [
     "ANN204", # Missing return type annotation for special (dunder) method
+    "ANN003", # Missing type annotation for `**kwargs`
     "FBT",    # Using boolean function arguments
     "TD",     # TODOs
     "FIX001", # Resolve FIXMEs
