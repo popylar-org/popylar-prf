@@ -274,8 +274,6 @@ class Stimulus:
 def _setup_2d_plot(
     stimulus: Stimulus,
     title: str | None = None,
-    labelsize: int | None = None,
-    titlesize: int | None = None,
     **kwargs,
 ) -> tuple[mpl.figure.Figure, mpl.axes.Axes, tuple[float, float, float, float]]:
     """Set up a 2D plot for a stimulus."""
@@ -283,21 +281,14 @@ def _setup_2d_plot(
 
     grid_limits = _get_grid_limits(stimulus.grid)
 
-    rc_context = {}
-    if labelsize is not None:
-        rc_context["axes.labelsize"] = labelsize
-    if titlesize is not None:
-        rc_context["axes.titlesize"] = titlesize
+    fig, ax = plt.subplots(**kwargs)
 
-    with mpl.rc_context(rc_context):
-        fig, ax = plt.subplots(**kwargs)
+    if stimulus.dimension_labels:
+        ax.set_ylabel(stimulus.dimension_labels[0])
+        ax.set_xlabel(stimulus.dimension_labels[1])
 
-        if stimulus.dimension_labels:
-            ax.set_ylabel(stimulus.dimension_labels[0])
-            ax.set_xlabel(stimulus.dimension_labels[1])
-
-        if title:
-            ax.set_title(title)
+    if title:
+        ax.set_title(title)
 
     return fig, ax, grid_limits
 
@@ -349,7 +340,7 @@ def animate_2d_stimulus(  # noqa: PLR0913
     >>> video = ani.to_html5_video()
     >>> HTML(video)
     """
-    fig, ax, grid_limits = _setup_2d_plot(stimulus, title, labelsize=16, titlesize=20, **kwargs)
+    fig, ax, grid_limits = _setup_2d_plot(stimulus, title, **kwargs)
 
     n_frames = stimulus.design.shape[0]
     ims = []
