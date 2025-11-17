@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from prfmodel.adapter import Adapter
+from prfmodel.adapter import ParameterConstraint
 from prfmodel.adapter import ParameterTransform
 from prfmodel.fitters.sgd import SGDFitter
 from prfmodel.fitters.sgd import SGDHistory
@@ -108,6 +109,7 @@ class TestSGDFitter(TestSetup):
         adapter = Adapter(
             [
                 ParameterTransform(["sigma", "shape_1"], keras.ops.log, keras.ops.exp),
+                ParameterConstraint(["shape_1"], upper="shape_2", transform_fun=keras.ops.log),
             ],
         )
 
