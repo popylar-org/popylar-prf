@@ -11,7 +11,7 @@ from tqdm import tqdm
 from prfmodel.models.base import BaseModel
 from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
-from .backend.base import ParamsDict
+from prfmodel.utils import ParamsDict
 
 
 class GridHistory:
