@@ -25,7 +25,14 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = ["keras", "numpy", "pandas", "scipy"]
+dependencies = [
+    "keras",
+    "more-itertools",
+    "numpy<2.0.0",
+    "pandas",
+    "scipy",
+    "tqdm"
+]
 description = "A modern Python implementation for population receptive field modelling."
 keywords = [""]
 license = {file = "LICENSE"}
@@ -51,6 +58,7 @@ dev = [
     "mypy",
     "types-tensorflow",
     "pandas-stubs",
+    "types-tqdm"
 ]
 publishing = [
     "build",
