@@ -130,6 +130,8 @@ jobs:
           df -h
       - name: Upgrade pip and install dependencies
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
           python -m pip install --upgrade pip setuptools
           python -m pip install .[dev,publishing,tensorflow,torch,jax]
       - name: Run mypy on package
