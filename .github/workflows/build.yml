@@ -31,16 +31,21 @@ jobs:
           python --version
           pwd
           du -h -d 1
+          df -h
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
           python -m pip install .[dev,publishing,tensorflow]
       - name: Run unit tests
-        run: python -m pytest -v
+        run: |
+          python -m pytest -v
+          df -h
         env:
           KERAS_BACKEND: tensorflow
       - name: Verify that we can build the package
-        run: python -m build
+        run: |
+          python -m build
+          df -h
   lint:
     name: Linting build
     runs-on: ubuntu-latest
@@ -59,6 +64,7 @@ jobs:
           python --version
           pwd
           du -h -d 1
+          df -h
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
@@ -67,6 +73,7 @@ jobs:
         run: |
           ruff check
           ruff format --check
+          df -h
   backend:
     name: Run tests for backend ${{ matrix.backend }}
     runs-on: 'ubuntu-latest'
@@ -87,12 +94,15 @@ jobs:
           python --version
           pwd
           du -h -d 1
+          df -h
       - name: Upgrade pip and install dependencies with backend ${{ matrix.backend }}
         run: |
           python -m pip install --upgrade pip setuptools
           python -m pip install .[dev,publishing,${{ matrix.backend }}]
       - name: Run unit tests
-        run: python -m pytest -v
+        run: |
+          python -m pytest -v
+          df -h
         env:
           KERAS_BACKEND: ${{ matrix.backend }}
           JAX_ENABLE_X64: "true"
@@ -113,9 +123,12 @@ jobs:
           python --version
           pwd
           du -h -d 1
+          df -h
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
           python -m pip install .[dev,publishing,tensorflow,torch,jax]
       - name: Run mypy on package
-        run: mypy src/
+        run: |
+          mypy src/
+          df -h
