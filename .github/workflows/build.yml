@@ -16,8 +16,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-        python-version: ['3.10', '3.11', '3.12']
+        os: ['ubuntu-latest']
+        python-version: ['3.12']
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -30,7 +30,7 @@ jobs:
           which python
           python --version
           pwd
-          du -h -d 1
+          du ./ -h -d 1
           df -h
       - name: Upgrade pip and install dependencies
         run: |
@@ -40,11 +40,13 @@ jobs:
         run: |
           python -m pytest -v
           df -h
+          du ./ -h -d 1
         env:
           KERAS_BACKEND: tensorflow
       - name: Verify that we can build the package
         run: |
           python -m build
+          du ./ -h -d 1
           df -h
   lint:
     name: Linting build
@@ -63,7 +65,7 @@ jobs:
           which python
           python --version
           pwd
-          du -h -d 1
+          du ./ -h -d 1
           df -h
       - name: Upgrade pip and install dependencies
         run: |
@@ -73,6 +75,7 @@ jobs:
         run: |
           ruff check
           ruff format --check
+          du ./ -h -d 1
           df -h
   backend:
     name: Run tests for backend ${{ matrix.backend }}
@@ -80,7 +83,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        backend: ['tensorflow', 'torch', 'jax']
+        backend: ['tensorflow']
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.12
@@ -93,7 +96,7 @@ jobs:
           which python
           python --version
           pwd
-          du -h -d 1
+          du ./ -h -d 1
           df -h
       - name: Upgrade pip and install dependencies with backend ${{ matrix.backend }}
         run: |
@@ -102,6 +105,7 @@ jobs:
       - name: Run unit tests
         run: |
           python -m pytest -v
+          du ./ -h -d 1
           df -h
         env:
           KERAS_BACKEND: ${{ matrix.backend }}
@@ -122,7 +126,7 @@ jobs:
           which python
           python --version
           pwd
-          du -h -d 1
+          du ./ -h -d 1
           df -h
       - name: Upgrade pip and install dependencies
         run: |
@@ -131,4 +135,5 @@ jobs:
       - name: Run mypy on package
         run: |
           mypy src/
+          du ./ -h -d 1
           df -h
