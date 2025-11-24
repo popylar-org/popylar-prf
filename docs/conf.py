@@ -91,6 +91,6 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
     # 'scikit-learn': ('https://scikit-learn.org/stable/', None),
-    # 'matplotlib': ('https://matplotlib.org/stable/', None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
     "pandas": ("http://pandas.pydata.org/docs/", None),
 }
