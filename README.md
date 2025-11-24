@@ -39,6 +39,8 @@ python -m pip install .[jax]
 
 ## Documentation
 
+The online documentation is available at: https://popylar-org.github.io/prfmodel/.
+
 The local documentation can be build as HTML files with:
 
 ```console
