@@ -28,6 +28,7 @@ classifiers = [
 dependencies = [
     "keras",
     "matplotlib",
+    "more-itertools",
     "numpy<2.0.0",
     "pandas",
     "scipy",
