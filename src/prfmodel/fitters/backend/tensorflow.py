@@ -21,7 +21,7 @@ class TensorFlowSGDFitter(BaseSGDFitter):
         params = ParamsDict({v.name: v.value for v in self.trainable_variables + self.non_trainable_variables})
 
         with tf.GradientTape() as tape:
-            y_pred = self.model(x, params)
+            y_pred = self.model(x, params, dtype=self.dtype)
             loss = self.compute_loss(y=y, y_pred=y_pred)
 
         gradients = tape.gradient(loss, self.trainable_variables)

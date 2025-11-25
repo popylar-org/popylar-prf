@@ -95,7 +95,7 @@ class BasePRFResponse(BaseModel):
     """
 
     @abstractmethod
-    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Predict the model response for a stimulus.
 
@@ -106,12 +106,15 @@ class BasePRFResponse(BaseModel):
         parameters : pandas.DataFrame
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different voxels.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
 
         Returns
         -------
         Tensor
-            Model predictions of shape `(num_voxels, ...)`. The number of voxels is the number of rows in
-            `parameters`. The number and size of other axes depends on the stimulus.
+            Model predictions of shape `(num_voxels, ...)` and dtype `dtype`. The number of voxels is the
+            number of rows in `parameters`. The number and size of other axes depends on the stimulus.
 
         """
 
@@ -136,8 +139,6 @@ class BaseImpulse(BaseModel):
     resolution : float, default=1.0
         The time resultion of the impulse response (in seconds), that is the number of points per second at which the
         impulse response function is evaluated.
-    dtype : str, default="float64"
-        Dtype of the impulse response.
 
     """
 
@@ -146,14 +147,14 @@ class BaseImpulse(BaseModel):
         duration: float = 32.0,
         offset: float = 0.0001,
         resolution: float = 1.0,
-        dtype: str = "float64",
     ):
         super().__init__()
 
         self.duration = duration
         self.offset = offset
         self.resolution = resolution
-        self.dtype = dtype
+
+        self._frames: Tensor | None = None
 
     @property
     def num_frames(self) -> int:
@@ -168,10 +169,13 @@ class BaseImpulse(BaseModel):
         Time frames are linearly interpolated between `offset` and `duration` and have shape (1, `num_frames`).
 
         """
-        return ops.expand_dims(ops.linspace(self.offset, self.duration, self.num_frames, dtype=self.dtype), 0)
+        if self._frames is None:
+            self._frames = ops.expand_dims(ops.linspace(self.offset, self.duration, self.num_frames), 0)
+
+        return self._frames
 
     @abstractmethod
-    def __call__(self, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Compute the impulse response.
 
@@ -180,12 +184,15 @@ class BaseImpulse(BaseModel):
         parameters : pandas.DataFrame
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different voxels.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
 
         Returns
         -------
         Tensor
-            Model predictions of shape `(num_voxels, num_frames)`. The number of voxels is the number of rows in
-            `parameters`.
+            Model predictions of shape `(num_voxels, num_frames)` and dtype `dtype`. The number of voxels is the
+            number of rows in `parameters`.
 
         """
 
@@ -203,7 +210,7 @@ class BaseTemporal(BaseModel):
     """
 
     @abstractmethod
-    def __call__(self, inputs: Tensor, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, inputs: Tensor, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Make predictions with the temporal model.
 
@@ -214,6 +221,15 @@ class BaseTemporal(BaseModel):
         parameters : pandas.DataFrame
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different batches.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
+
+        Returns
+        -------
+        Tensor
+            Model predictions of shape `(num_voxels, num_frames)` and dtype `dtype`. The number of voxels is the
+            number of rows in `parameters`.
 
         """
 
@@ -265,7 +281,7 @@ class BasePRFModel(BaseModel):
         return list(set(param_names))
 
     @abstractmethod
-    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Predict a composite population receptive field response to a stimulus.
 
@@ -276,11 +292,14 @@ class BasePRFModel(BaseModel):
         parameters : pandas.DataFrame
             Dataframe with columns containing different (sub-) model parameters and rows containing parameter values
             for different voxels.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
 
         Returns
         -------
         Tensor
-            Model predictions with the same shape as `inputs`.
+            Model predictions with the same shape as `inputs` and dtype `dtype`.
             Model predictions of shape (num_voxels, num_frames). The number of voxels is the number of rows in
             `parameters`. The number of frames is the number of frames in the stimulus design.
 

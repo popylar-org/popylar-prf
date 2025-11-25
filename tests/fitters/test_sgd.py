@@ -9,9 +9,12 @@ from prfmodel.fitters.sgd import SGDHistory
 from prfmodel.models.gaussian import Gaussian2DPRFModel
 from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
+from prfmodel.utils import get_dtype
 from .conftest import TestSetup
+from .conftest import parametrize_dtype
 
 
+@parametrize_dtype
 class TestSGDFitter(TestSetup):
     """Tests for SGDFitter class.
 
@@ -34,22 +37,31 @@ class TestSGDFitter(TestSetup):
 
     @pytest.mark.parametrize(
         ("optimizer", "loss"),
-        [(None, None), (keras.optimizers.Adam(), keras.losses.MeanSquaredError())],
+        [(None, None), (keras.optimizers.Adam, keras.losses.MeanSquaredError)],
     )
-    def test_fit(
+    def test_fit(  # noqa: PLR0913 (too many arguments in function definition)
         self,
         stimulus: Stimulus,
         model: Gaussian2DPRFModel,
-        optimizer: keras.optimizers.Optimizer,
-        loss: keras.losses.Loss,
+        optimizer: type[keras.optimizers.Optimizer],
+        loss: type[keras.losses.Loss],
         params: pd.DataFrame,
+        dtype: str,
     ):
         """Test that fit returns parameters with the correct shape."""
+        # Instantiate class args if not None
+        if optimizer is not None:
+            optimizer = optimizer()
+
+        if loss is not None:
+            loss = loss()
+
         fitter = SGDFitter(
             model=model,
             stimulus=stimulus,
             optimizer=optimizer,
             loss=loss,
+            dtype=dtype,
         )
 
         observed = model(stimulus, params)
@@ -64,11 +76,13 @@ class TestSGDFitter(TestSetup):
         stimulus: Stimulus,
         model: Gaussian2DPRFModel,
         params: pd.DataFrame,
+        dtype: str,
     ):
         """Test that fit with fixed parameters returns parameters with the correct shape and fixed values."""
         fitter = SGDFitter(
             model=model,
             stimulus=stimulus,
+            dtype=dtype,
         )
 
         observed = model(stimulus, params)
@@ -79,4 +93,4 @@ class TestSGDFitter(TestSetup):
 
         self._check_history(history)
         self._check_sgd_params(sgd_params, params)
-        assert np.all(sgd_params[fixed] == params[fixed])
+        assert np.all(sgd_params[fixed] == params[fixed].astype(get_dtype(dtype)))

@@ -5,6 +5,7 @@ from keras import ops
 from prfmodel.backend import gammaln
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
+from prfmodel.utils import get_dtype
 from .base import BaseImpulse
 from .base import BatchDimensionError
 
@@ -195,8 +196,8 @@ class TwoGammaImpulse(BaseImpulse):
 
     """
 
-    def __init__(self, duration: float = 32.0, offset: float = 0.0001, resolution: float = 1.0, dtype: str = "float64"):
-        super().__init__(duration, offset, resolution, dtype)
+    def __init__(self, duration: float = 32.0, offset: float = 0.0001, resolution: float = 1.0):
+        super().__init__(duration, offset, resolution)
 
     @property
     def parameter_names(self) -> list[str]:
@@ -208,7 +209,7 @@ class TwoGammaImpulse(BaseImpulse):
         """
         return ["shape_1", "rate_1", "shape_2", "rate_2", "weight"]
 
-    def __call__(self, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Predict the impulse response.
 
@@ -217,21 +218,26 @@ class TwoGammaImpulse(BaseImpulse):
         parameters : pandas.DataFrame
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different batches. Must contain the columns `shape_1`, `rate_1`, `shape_2`, `rate_2`, and `weight`.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
 
         Returns
         -------
         Tensor
-            The predicted impulse response with shape `(num_batches, num_frames)`.
+            The predicted impulse response with shape `(num_batches, num_frames)` and dtype `dtype`.
 
         """
-        shape_1 = convert_parameters_to_tensor(parameters[["shape_1"]])
-        rate_1 = convert_parameters_to_tensor(parameters[["rate_1"]])
-        shape_2 = convert_parameters_to_tensor(parameters[["shape_2"]])
-        rate_2 = convert_parameters_to_tensor(parameters[["rate_2"]])
-        weight = convert_parameters_to_tensor(parameters[["weight"]])
+        dtype = get_dtype(dtype)
+        frames = ops.cast(self.frames, dtype=dtype)
+        shape_1 = convert_parameters_to_tensor(parameters[["shape_1"]], dtype=dtype)
+        rate_1 = convert_parameters_to_tensor(parameters[["rate_1"]], dtype=dtype)
+        shape_2 = convert_parameters_to_tensor(parameters[["shape_2"]], dtype=dtype)
+        rate_2 = convert_parameters_to_tensor(parameters[["rate_2"]], dtype=dtype)
+        weight = convert_parameters_to_tensor(parameters[["weight"]], dtype=dtype)
         # Compute unnormalized density because normalizing constant cancels out when taking difference anyway
-        dens_1 = gamma_density(self.frames, shape_1, rate_1, norm=False)
+        dens_1 = gamma_density(frames, shape_1, rate_1, norm=False)
         dens_1_norm = dens_1 / ops.max(dens_1, axis=1, keepdims=True)
-        dens_2 = gamma_density(self.frames, shape_2, rate_2, norm=False)
+        dens_2 = gamma_density(frames, shape_2, rate_2, norm=False)
         dens_2_norm = dens_2 / ops.max(dens_2, axis=1, keepdims=True)
         return dens_1_norm - weight * dens_2_norm

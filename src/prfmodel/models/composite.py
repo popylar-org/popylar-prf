@@ -5,6 +5,7 @@ import pandas as pd
 from keras import ops
 from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
+from prfmodel.utils import get_dtype
 from .base import BaseImpulse
 from .base import BasePRFModel
 from .base import BasePRFResponse
@@ -63,7 +64,7 @@ class SimplePRFModel(BasePRFModel):
             temporal_model=temporal_model,
         )
 
-    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Predict a simple population receptive field model response to a stimulus.
 
@@ -74,26 +75,30 @@ class SimplePRFModel(BasePRFModel):
         parameters : pandas.DataFrame
             Dataframe with columns containing different (sub-) model parameters and rows containing parameter values
             for different voxels.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
 
         Returns
         -------
         Tensor
-            Model predictions of shape (num_voxels, num_frames). The number of voxels is the number of rows in
-            `parameters`. The number of frames is the number of frames in the stimulus design.
+            Model predictions of shape (num_voxels, num_frames) and dtype `dtype`. The number of voxels is the
+            number of rows in `parameters`. The number of frames is the number of frames in the stimulus design.
 
         """
+        dtype = get_dtype(dtype)
         prf_model = cast("BasePRFResponse", self.models["prf_model"])
-        response = prf_model(stimulus, parameters)
-        design = ops.convert_to_tensor(stimulus.design)
-        response = encode_prf_response(response, design)
+        response = prf_model(stimulus, parameters, dtype=dtype)
+        design = ops.convert_to_tensor(stimulus.design, dtype=dtype)
+        response = encode_prf_response(response, design, dtype=dtype)
 
         if self.models["impulse_model"] is not None:
             impulse_model = cast("BaseImpulse", self.models["impulse_model"])
-            impulse_response = impulse_model(parameters)
+            impulse_response = impulse_model(parameters, dtype=dtype)
             response = convolve_prf_impulse_response(response, impulse_response)
 
         if self.models["temporal_model"] is not None:
             temporal_model = cast("BaseTemporal", self.models["temporal_model"])
-            response = temporal_model(response, parameters)
+            response = temporal_model(response, parameters, dtype=dtype)
 
         return response
