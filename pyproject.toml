@@ -51,6 +51,7 @@ dev = [
     "pytest-cov",
     "ruff",
     "tox",
+    "myst_nb",
     "myst_parser",
     "pre-commit",
     "sphinx",
