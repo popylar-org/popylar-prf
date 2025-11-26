@@ -61,7 +61,8 @@ dev = [
     "types-tensorflow",
     "pandas-stubs",
     "jupyter",
-    "types-tqdm"
+    "types-tqdm",
+    "ipykernel"
 ]
 publishing = [
     "build",
