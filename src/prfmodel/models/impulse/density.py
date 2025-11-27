@@ -1,0 +1,75 @@
+"""Density functions."""
+
+from keras import ops
+from prfmodel.backend import gammaln
+from prfmodel.typing import Tensor
+
+
+def gamma_density(value: Tensor, shape: Tensor, rate: Tensor, norm: bool = True) -> Tensor:
+    r"""
+    Calculate the density of a gamma distribution.
+
+    The distribution uses a shape and rate parameterization.
+    Raises an error when evaluated at negative values.
+
+    Parameters
+    ----------
+    value : Tensor
+        The values at which to evaluate the gamma distribution. Must be > 0.
+    shape : Tensor
+        The shape parameter. Must be > 0.
+    rate : Tensor
+        The rate parameter. Must be > 0.
+    norm : bool, default=True
+        Whether to compute the normalized density.
+
+    Returns
+    -------
+    Tensor
+        The density of the gamma distribution at `value`.
+
+    Notes
+    -----
+    The unnormalized density of the gamma distribution
+    with `shape` :math:`\alpha` and `rate` :math:`\lambda` is given by:
+
+    .. math::
+
+        f(x) = x^{\mathtt{\alpha} - 1} e^{\mathtt{\lambda} x}.
+
+    When `norm=True`, the density is multiplied with a normalizing constant:
+
+    .. math::
+
+        f_{norm} = \frac{\mathtt{\lambda}^{\mathtt{\alpha}}}{\Gamma(\mathtt{\alpha})} * f(x).
+
+    Raises
+    ------
+    ValueError
+        If `values`, `shape`, or `rate` are zero or negative.
+
+    """
+    value = ops.convert_to_tensor(value)
+    shape = ops.convert_to_tensor(shape)
+    rate = ops.convert_to_tensor(rate)
+
+    if not ops.all(value > 0.0):
+        msg = "Values must be > 0"
+        raise ValueError(msg)
+
+    if not ops.all(shape > 0.0):
+        msg = "Shape parameters must be > 0"
+        raise ValueError(msg)
+
+    if not ops.all(rate > 0.0):
+        msg = "Rate parameters must be > 0"
+        raise ValueError(msg)
+
+    # Calculate log density and then exponentiate
+    dens = (shape - 1) * ops.log(value) - rate * value
+
+    if norm:
+        # Normalize
+        return ops.exp(shape * ops.log(rate) + dens - gammaln(shape))
+
+    return ops.exp(dens)

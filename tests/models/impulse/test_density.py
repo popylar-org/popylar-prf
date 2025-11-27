@@ -1,41 +1,20 @@
-"""Tests for impulse response model classes and functions."""
+"""Tests for density functions."""
 
 from itertools import product
 import numpy as np
-import pandas as pd
 import pytest
 from scipy import integrate
 from scipy import special
-from prfmodel.models.impulse import TwoGammaImpulse
-from prfmodel.models.impulse import convolve_prf_impulse_response
 from prfmodel.models.impulse import gamma_density
-from .conftest import parametrize_dtype
+from prfmodel.models.impulse import shifted_gamma_density
 
 
-def test_convolve_prf_impulse_response():
-    """Test that convolve_prf_impulse_response returns response with correct shape."""
-    num_batches = 3
-    num_prf_frames = 10
-    num_irf_frames = 3
-
-    prf_response = np.ones((num_batches, num_prf_frames))
-    irf_response = np.ones((num_batches, num_irf_frames))
-
-    resp_conv = convolve_prf_impulse_response(prf_response, irf_response)
-
-    assert resp_conv.shape == (num_batches, num_prf_frames)
-
-
-class TestIRFSetup:
-    """Setup parameters for impulse response model testing."""
+class TestGammaDensitySetup:
+    """Setup for testing gamma density functions."""
 
     duration = 32
     offset = 0.0001
     resolution = 0.1
-
-
-class TestGammaDensity(TestIRFSetup):
-    """Tests for calc_gamma_density function."""
 
     @pytest.fixture
     def frames(self):
@@ -47,6 +26,10 @@ class TestGammaDensity(TestIRFSetup):
     def parameter_range(self):
         """Range of shape and rate parameters."""
         return np.round(np.linspace(0.1, 5.0, 5), 2)
+
+
+class TestGammaDensity(TestGammaDensitySetup):
+    """Tests for gamma_density function."""
 
     @pytest.fixture
     def parameters(self, parameter_range: np.ndarray):
@@ -131,51 +114,54 @@ class TestGammaDensity(TestIRFSetup):
             gamma_density(frames, shape, rate)
 
 
-class TestTwoGammaResponseModel(TestIRFSetup):
-    """Tests for TwoGammaResponseModel class."""
+class TestShiftedGammaDensity(TestGammaDensitySetup):
+    """Tests for shifted_gamma_density function."""
 
     @pytest.fixture
-    def parameter_range(self):
-        """Range of parameters."""
-        return np.round(np.linspace(0.1, 5.0, 3), 2)
+    def shift_parameter_range(self):
+        """Range for shift parameter."""
+        return np.linspace(-5, 5, num=5)
 
     @pytest.fixture
-    def weight_range(self):
-        """Range of weigth parameter."""
-        return np.linspace(0.0, 1.0, 3)
+    def parameters(self, parameter_range: np.ndarray, shift_parameter_range: np.ndarray):
+        """Shape, rate, and shift parameter combinations."""
+        return np.array(list(product(parameter_range, parameter_range, shift_parameter_range)))
 
-    @pytest.fixture
-    def parameters(self, parameter_range: np.ndarray, weight_range: np.ndarray):
-        """Model parameter combinations."""
-        values = np.array(
-            list(
-                product(
-                    parameter_range,
-                    parameter_range,
-                    parameter_range,
-                    parameter_range,
-                    weight_range,
-                ),
-            ),
-        )
-        return pd.DataFrame.from_records(values, columns=["shape_1", "rate_1", "shape_2", "rate_2", "weight"])
+    def test_shifted_gamma_density(self, frames: np.ndarray, parameters: np.ndarray):
+        """
+        Test that shifted gamma density peaks at correct frame across combinations of shape, rate, and shift parameters.
 
-    @pytest.fixture
-    def irf_model(self):
-        """Impulse response model object."""
-        return TwoGammaImpulse(self.duration, self.offset, self.resolution)
+        Argument `parameters` is a three-dimensional array where the first column is the shape, the second column
+        the rate parameter, and the third columnt the shift parameter of each parameter combination.
 
-    def test_num_frames(self, irf_model: TwoGammaImpulse):
-        """Test that property num_frames is correct."""
-        assert irf_model.num_frames == int(self.duration / self.resolution)
+        The peak of the gamma density is tested against the shifted expected analytical mode of the gamma distribution.
 
-    def test_frames(self, irf_model: TwoGammaImpulse):
-        """Test that property frames has correct shape."""
-        assert irf_model.frames.shape == (1, irf_model.num_frames)
+        """
+        # Parameters must have shape (n, 1)
+        shape = np.expand_dims(parameters[:, 0], 1)
+        rate = np.expand_dims(parameters[:, 1], 1)
+        shift = np.expand_dims(parameters[:, 2], 1)
 
-    @parametrize_dtype
-    def test_call(self, irf_model: TwoGammaImpulse, parameters: pd.DataFrame, dtype: str):
-        """Test that model response has correct shape."""
-        resp = irf_model(parameters, dtype)
+        resp = np.asarray(shifted_gamma_density(frames, shape, rate, shift))
 
-        assert resp.shape == (parameters.shape[0], irf_model.frames.shape[1])
+        assert np.all(resp >= 0.0)
+
+        frames = frames.squeeze()
+        # Calc expected analytical mode of each parameter combination
+        expected_mode = (np.where(shape < 1, 0, (shape - 1) / rate) + shift).squeeze()
+        # Find the frame of the peak response
+        peak_frame_idx = np.argmax(resp, axis=1)
+        # Find the peak response of each parameter combination
+        peak_response = frames[peak_frame_idx]
+
+        for ep, pr, idx, sh in zip(expected_mode, peak_response, peak_frame_idx, shift.squeeze(), strict=False):
+            # If the expected mode is beyond the last frame, the peak response should be in the last frame
+            if ep >= frames.max():
+                assert idx == (len(frames) - 1), "Peak response must be in last frame"
+            # If the expected mode is before the first frame, the peak response should be in the first nonzero frame
+            elif ep <= frames.min():
+                first_nonzero_idx = np.argmax(frames > sh)
+                assert idx == first_nonzero_idx, "Peak response must be in first nonzero frame"
+            # Difference between expected mode and peak response should not be larger than frame resolution
+            else:
+                assert abs(pr - ep) <= self.resolution
