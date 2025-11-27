@@ -1,6 +1,7 @@
 
-[![github license badge](https://img.shields.io/github/license/popylar-org/popylar-prf)](https://github.com/popylar-org/popylar-prf/blob/main/LICENSE)
-[![build](https://github.com/popylar-org/popylar-prf/actions/workflows/build.yml/badge.svg)](https://github.com/popylar-org/popylar-prf/actions/workflows/build.yml)
+[![github license badge](https://img.shields.io/github/license/popylar-org/prfmodel)](https://github.com/popylar-org/prfmodel/blob/main/LICENSE)
+[![build](https://github.com/popylar-org/prfmodel/actions/workflows/build.yml/badge.svg)](https://github.com/popylar-org/prfmodel/actions/workflows/build.yml)
+[![docs](https://img.shields.io/github/actions/workflow/status/popylar-org/prfmodel/.github%2Fworkflows%2Fdocumentation.yml?label=docs)](https://github.com/popylar-org/prfmodel/actions/workflows/documentation.yml)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![Linting: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -13,8 +14,8 @@ A modern Python implementation for population receptive field model fitting.
 To install the development version of prfmodel from GitHub, run:
 
 ```console
-git clone git@github.com:popylar-org/popylar-prf.git
-cd popylar-prf
+git clone git@github.com:popylar-org/prfmodel.git
+cd prfmodel
 python -m pip install .
 ```
 
@@ -44,7 +45,7 @@ The online documentation is available at: https://popylar-org.github.io/prfmodel
 The local documentation can be build as HTML files with:
 
 ```console
-# In popylar-prf directory
+# In prfmodel directory
 cd docs/
 make html
 ```

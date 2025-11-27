@@ -45,7 +45,7 @@ extensions = [
     "sphinx.ext.todo",
     "autoapi.extension",
     "sphinx.ext.viewcode",
-    "myst_parser",
+    "myst_nb",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -69,6 +69,15 @@ autoapi_options = [
     "special-members",
     "imported-members",
 ]
+
+myst_enable_extensions = [
+    "dollarmath",
+]
+
+nb_merge_streams = True
+nb_execution_mode = "cache"
+nb_execution_timeout = 120
+nb_scroll_outputs = True
 
 # -- Options for HTML output ----------------------------------------------
 

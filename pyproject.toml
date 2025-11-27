@@ -51,6 +51,7 @@ dev = [
     "pytest-cov",
     "ruff",
     "tox",
+    "myst_nb",
     "myst_parser",
     "pre-commit",
     "sphinx",
@@ -60,7 +61,8 @@ dev = [
     "types-tensorflow",
     "pandas-stubs",
     "jupyter",
-    "types-tqdm"
+    "types-tqdm",
+    "ipykernel"
 ]
 publishing = [
     "build",
@@ -74,6 +76,9 @@ tensorflow = ["tensorflow"]
 [project.urls]
 Repository = "https://github.com/popylar-org/prfmodel"
 Issues = "https://github.com/popylar-org/prfmodel/issues"
+
+[tool.setuptools.package-data]
+"prfmodel.data" = ["*.nii.gz"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
