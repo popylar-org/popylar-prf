@@ -2,6 +2,7 @@
 
 from keras import ops
 from prfmodel.typing import Tensor
+from prfmodel.utils import get_dtype
 
 
 class ResponseDesignShapeError(Exception):
@@ -22,7 +23,7 @@ class ResponseDesignShapeError(Exception):
         super().__init__(f"Shapes of 'response' {response_shape} and 'design' {design_shape} do not match")
 
 
-def encode_prf_response(response: Tensor, design: Tensor) -> Tensor:
+def encode_prf_response(response: Tensor, design: Tensor, dtype: str | None = None) -> Tensor:
     """
     Encode a population receptive field model response with a stimulus design.
 
@@ -37,12 +38,14 @@ def encode_prf_response(response: Tensor, design: Tensor) -> Tensor:
     design : Tensor
         The stimulus design containing the stimulus value in one or more dimensions over different time frames.
         The first axis is assumed to be time frames. Additional axes represent stimulus dimensions.
+    dtype : str, optional
+        The dtype of the prediction result. If `None` (the default), uses the dtype from
+        :func:`prfmodel.utils.get_dtype`.
 
     Returns
     -------
     Tensor
-        The stimulus encoded model response with two dimensions.
-        The first dimension is the batch dimension, the second dimension is time frames.
+        The stimulus encoded model response with shape (num_batches, num_frames) and dtype `dtype`.
 
     Raises
     ------
@@ -82,8 +85,9 @@ def encode_prf_response(response: Tensor, design: Tensor) -> Tensor:
     (3, 10)
 
     """
-    response = ops.convert_to_tensor(response)
-    design = ops.convert_to_tensor(design)
+    dtype = get_dtype(dtype)
+    response = ops.convert_to_tensor(response, dtype)
+    design = ops.convert_to_tensor(design, dtype)
 
     if response.shape[1:] != design.shape[1:]:
         raise ResponseDesignShapeError(response.shape, design.shape)

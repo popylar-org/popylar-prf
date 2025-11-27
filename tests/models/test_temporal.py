@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 from prfmodel.models.base import ShapeError
 from prfmodel.models.temporal import BaselineAmplitude
+from .conftest import parametrize_dtype
 
 
 class TestBaselineAmplitdue:
@@ -27,11 +28,12 @@ class TestBaselineAmplitdue:
             },
         )
 
-    def test_call(self, model: BaselineAmplitude, params: pd.DataFrame):
+    @parametrize_dtype
+    def test_call(self, model: BaselineAmplitude, params: pd.DataFrame, dtype: str):
         """Test that BaselineAmplitude returns response with correct shape."""
         inputs = np.ones((params.shape[0], self.num_frames))
 
-        resp = model(inputs, params)
+        resp = model(inputs, params, dtype)
 
         assert resp.shape == inputs.shape
 

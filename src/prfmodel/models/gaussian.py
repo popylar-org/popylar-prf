@@ -1,11 +1,13 @@
 """Gaussian population receptive field response models."""
 
+import math
 import pandas as pd
 from keras import ops
 from prfmodel.stimulus import GridDimensionsError
 from prfmodel.stimulus import Stimulus
 from prfmodel.typing import Tensor
 from prfmodel.utils import convert_parameters_to_tensor
+from prfmodel.utils import get_dtype
 from .base import _MIN_PARAMETER_DIM
 from .base import BaseImpulse
 from .base import BasePRFResponse
@@ -148,11 +150,16 @@ def predict_gaussian_response(grid: Tensor, mu: Tensor, sigma: Tensor) -> Tensor
     # Expand axes to enable keras.ops autocasting
     grid, mu, sigma = _expand_gaussian_args(grid, mu, sigma)
 
+    sigma_squared = ops.square(sigma)
+
     # Gaussian response
     resp = ops.sum(ops.square(grid - mu), axis=-1)
-    resp /= 2 * ops.square(sigma)
+    resp /= 2 * sigma_squared
 
-    return ops.exp(-resp)
+    # Divide by volume to normalize
+    volume = ops.sqrt(2 * math.pi * sigma_squared)
+
+    return ops.exp(-resp) / volume
 
 
 class Gaussian2DResponse(BasePRFResponse):
@@ -200,7 +207,7 @@ class Gaussian2DResponse(BasePRFResponse):
         """Names of parameters used by the model: `mu_y`, `mu_x`, `sigma`."""
         return ["mu_y", "mu_x", "sigma"]
 
-    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame) -> Tensor:
+    def __call__(self, stimulus: Stimulus, parameters: pd.DataFrame, dtype: str | None = None) -> Tensor:
         """
         Predict the model response for a stimulus with a 2D grid.
 
@@ -211,18 +218,23 @@ class Gaussian2DResponse(BasePRFResponse):
         parameters : pandas.DataFrame
             Dataframe with columns containing different model parameters and rows containing parameter values
             for different voxels. Must contain the columns `mu_y`, `mu_x` and `sigma`.
+        dtype : str, optional
+            The dtype of the prediction result. If `None` (the default), uses the dtype from
+            :func:`prfmodel.utils.get_dtype`.
 
         Returns
         -------
         Tensor
-            Model predictions of shape `(num_voxels, size_y, size_x)` where
+            Model predictions of shape `(num_voxels, size_y, size_x)` and dtype `dtype`.
             `num_voxels` is the number of rows in `parameters` and `size_y` and `size_x` are the sizes of the
             x and y stimulus grid dimension.
+
         """
+        dtype = get_dtype(dtype)
         # Convention is y-dimension first
-        mu = convert_parameters_to_tensor(parameters[["mu_y", "mu_x"]])
-        sigma = convert_parameters_to_tensor(parameters[["sigma"]])
-        grid = ops.convert_to_tensor(stimulus.grid)
+        mu = convert_parameters_to_tensor(parameters[["mu_y", "mu_x"]], dtype=dtype)
+        sigma = convert_parameters_to_tensor(parameters[["sigma"]], dtype=dtype)
+        grid = ops.convert_to_tensor(stimulus.grid, dtype=dtype)
 
         return predict_gaussian_response(grid, mu, sigma)
 
